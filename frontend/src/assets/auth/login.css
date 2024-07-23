@@ -1,0 +1,50 @@
+.login-layout {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f2f5;
+  }
+  
+  .login-content {
+    width: 100%;
+    max-width: 360px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .login-card {
+    padding: 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .login-form {
+    width: 100%;
+  }
+  
+  .login-form .ant-form-item {
+    margin-bottom: 16px;
+  }
+  
+  .login-form .ant-btn-primary {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  
+  .login-form .ant-btn-primary:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  .login-form .ant-btn-primary span {
+    color: #fff;
+  }
+  

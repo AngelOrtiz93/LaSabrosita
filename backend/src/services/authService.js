@@ -5,13 +5,16 @@ const Empleado = require('../models/empleado');
 const Domiciliario = require('../models/domiciliario');
 
 const authenticateCliente = async (email, password) => {
+  console.log(`Buscando cliente con email: ${email}`);
   const cliente = await Cliente.findOne({ where: { email } });
+  console.log(`Cliente encontrado: ${cliente}`);
   if (!cliente) throw new Error('Cliente no encontrado');
   const isMatch = await bcrypt.compare(password, cliente.contraseña);
   if (!isMatch) throw new Error('Contraseña incorrecta');
   const token = jwt.sign({ id: cliente.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
   return token;
 };
+
 
 const authenticateEmpleado = async (email, password) => {
   const empleado = await Empleado.findOne({ where: { email } });

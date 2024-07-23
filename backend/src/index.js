@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors'); // Importar cors
 const app = express();
 const sequelize = require('./config/db');
 const Cliente = require('./models/cliente');
@@ -17,7 +18,14 @@ const productoRoutes = require('./routes/productoRoutes');
 const detallePedidoRoutes = require('./routes/detallePedidoRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 const errorMiddleware = require('./middleware/errorMiddleware');
-const authRoutes = require('./routes/authRoutes'); // Añadido
+const authRoutes = require('./routes/authRoutes');
+
+// Configurar CORS
+app.use(cors({
+  origin: 'http://localhost:3001', // Permite solicitudes solo desde esta URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+  allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
+}));
 
 app.use(express.json());
 app.use('/auth', authRoutes); // Añadido
