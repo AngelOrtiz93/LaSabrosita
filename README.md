@@ -40,7 +40,7 @@ Ensure you have the following installed on your machine:
    DB_NAME=La_Sabrosita
 
    PORT=3000
-   JWT_SECRET=your_jwt_secret
+   JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYxZDFkZWE3LTkwODctNDNmNy1hYjJlLWIzMjE5N2U0MTRhYiIsImlhdCI6MTcyMTc1MjUzOCwiZXhwIjoxNzIxNzU2MTM4fQ.f-VojL_IP9O5WAq9H4wXDGJcXOfK7P8EShqBmSh2mdY
    ```
 
    Make sure to replace  with a secure JWT secret.
