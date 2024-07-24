@@ -1,9 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-  // Extraer el token del encabezado 'Authorization'
-  const token = req.headers['authorization']; // Obtiene el token directamente
-
+  const token = req.headers['authorization'];
   if (!token) return res.status(403).send('Token missing');
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

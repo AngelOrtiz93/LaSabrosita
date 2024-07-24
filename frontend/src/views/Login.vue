@@ -1,7 +1,7 @@
 <template>
-  <a-layout class="login-layout">
-    <a-layout-content class="login-content">
-      <a-card title="Iniciar sesión" class="login-card">
+  <a-layout class="layout login-layout">
+    <a-layout-content class="content login-content">
+      <a-card title="Iniciar sesión" class="card login-card">
         <LoginForm :form="form" @submit="handleLogin" />
       </a-card>
     </a-layout-content>
@@ -12,23 +12,28 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
-import { login } from '@/api/auth'; // Ajusta la ruta según tu estructura
+import { login } from '@/api/auth';
 import LoginForm from '@/components/auth/LoginForm.vue';
 
 const form = ref({
   email: '',
-  password: '',
-  userType: ''
+  password: ''
 });
 
 const router = useRouter();
 
 const handleLogin = async () => {
   try {
-    const { token } = await login(form.value);
+    const { token, userType } = await login(form.value);
     localStorage.setItem('token', token);
     message.success('Inicio de sesión exitoso');
-    router.push('/');
+    if (userType === 'cliente') {
+      router.push('/cliente-dashboard');
+    } else if (userType === 'empleado') {
+      router.push('/empleado-dashboard');
+    } else if (userType === 'domiciliario') {
+      router.push('/domiciliario-dashboard');
+    }
   } catch (error) {
     message.error(error.response?.data?.message || 'Error al iniciar sesión');
   }
@@ -36,5 +41,5 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-@import '@/assets/auth/login.css';
+@import '@/assets/auth/common.css';
 </style>

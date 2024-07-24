@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors'); // Importar cors
+const cors = require('cors');
 const app = express();
 const sequelize = require('./config/db');
 const Cliente = require('./models/cliente');
@@ -9,7 +9,7 @@ const Producto = require('./models/producto');
 const DetallePedido = require('./models/detallePedido');
 const Domiciliario = require('./models/domiciliario');
 
-// Importar todas las rutas y middlewares
+// Importar rutas y middlewares
 const clienteRoutes = require('./routes/clienteRoutes');
 const domiciliarioRoutes = require('./routes/domiciliarioRoutes');
 const empleadoRoutes = require('./routes/empleadoRoutes');
@@ -22,21 +22,25 @@ const authRoutes = require('./routes/authRoutes');
 
 // Configurar CORS
 app.use(cors({
-  origin: 'http://localhost:3001', // Permite solicitudes solo desde esta URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-  allowedHeaders: ['Content-Type', 'Authorization'], // Cabeceras permitidas
+  origin: 'http://localhost:3001',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json());
-app.use('/auth', authRoutes); // Añadido
-app.use('/clientes', clienteRoutes);
-app.use('/domiciliarios', domiciliarioRoutes);
-app.use('/empleados', empleadoRoutes);
-app.use('/pedidos', pedidoRoutes);
-app.use('/productos', productoRoutes);
-app.use('/detalle-pedidos', detallePedidoRoutes);
 
-// Define las relaciones
+// Rutas públicas
+app.use('/auth', authRoutes); // Incluye rutas de autenticación (login, forgot-password, etc.)
+
+// Rutas privadas con autenticación requerida
+app.use('/clientes', authMiddleware, clienteRoutes);
+app.use('/domiciliarios', authMiddleware, domiciliarioRoutes);
+app.use('/empleados', authMiddleware, empleadoRoutes);
+app.use('/pedidos', authMiddleware, pedidoRoutes);
+app.use('/productos', authMiddleware, productoRoutes);
+app.use('/detalle-pedidos', authMiddleware, detallePedidoRoutes);
+
+// Definir relaciones
 Cliente.hasMany(Pedido, { foreignKey: 'clienteId' });
 Pedido.belongsTo(Cliente, { foreignKey: 'clienteId' });
 
@@ -52,11 +56,10 @@ DetallePedido.belongsTo(Producto, { foreignKey: 'productoId' });
 Pedido.hasMany(DetallePedido, { foreignKey: 'pedidoId' });
 DetallePedido.belongsTo(Pedido, { foreignKey: 'pedidoId' });
 
-// Aplicar middleware de autenticación después de las rutas públicas
-app.use(authMiddleware); 
-app.use(errorMiddleware); 
+// Aplicar middleware de manejo de errores
+app.use(errorMiddleware);
 
-sequelize.sync({ alter: true }).then(() => { 
+sequelize.sync({ alter: true }).then(() => {
   app.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);
   });

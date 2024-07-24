@@ -1,24 +1,53 @@
-const { authenticateCliente, authenticateEmpleado, authenticateDomiciliario } = require('../services/authService');
+const { authenticate, getUserByEmail, generateResetToken, sendResetEmail, resetPassword: resetPasswordService } = require('../services/authService');
+const jwt = require('jsonwebtoken');
 
+// Función para el inicio de sesión
 const login = async (req, res) => {
-  const { email, password, userType } = req.body;
+  const { email, password } = req.body;
   try {
-    let token;
-    if (userType === 'cliente') {
-      token = await authenticateCliente(email, password);
-    } else if (userType === 'empleado') {
-      token = await authenticateEmpleado(email, password);
-    } else if (userType === 'domiciliario') {
-      token = await authenticateDomiciliario(email, password);
-    } else {
-      return res.status(400).json({ message: 'Tipo de usuario no válido' });
-    }
-    res.json({ token });
+    const { token, userType } = await authenticate(email, password);
+    res.json({ token, userType });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
 };
 
+// Función para solicitar el correo de restablecimiento de contraseña
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    const resetToken = generateResetToken(user.email);
+    await sendResetEmail(user.email, resetToken);
+
+    res.status(200).json({ message: 'Correo de restablecimiento enviado' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al enviar el correo de restablecimiento' });
+  }
+};
+
+
+// Función para restablecer la contraseña
+const resetPasswordHandler = async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+    const email = decoded.email;
+
+    await resetPasswordService(email, newPassword);
+
+    res.status(200).json({ message: 'Contraseña restablecida con éxito' });
+  } catch (error) {
+    res.status(400).json({ message: 'Token inválido o expirado' });
+  }
+};
+
 module.exports = {
   login,
+  forgotPassword,
+  resetPassword: resetPasswordHandler
 };
