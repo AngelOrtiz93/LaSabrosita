@@ -1,3 +1,5 @@
+// src/models/pedido.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -40,6 +42,11 @@ Pedido.init({
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
     allowNull: true,
+  },
+  estado: { // Añade este campo si aún no está en el modelo
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'Pending' // Valor por defecto
   }
 }, {
   sequelize,

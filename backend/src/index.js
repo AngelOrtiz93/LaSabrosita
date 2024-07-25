@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const sequelize = require('./config/db');
+
+// Importar modelos
 const Cliente = require('./models/cliente');
 const Pedido = require('./models/pedido');
 const Empleado = require('./models/empleado');
@@ -33,7 +35,7 @@ app.use(express.json());
 app.use('/auth', authRoutes); // Incluye rutas de autenticación (login, forgot-password, etc.)
 
 // Rutas privadas con autenticación requerida
-app.use('/clientes', authMiddleware, clienteRoutes);
+app.use('/clientes', clienteRoutes);
 app.use('/domiciliarios', authMiddleware, domiciliarioRoutes);
 app.use('/empleados', authMiddleware, empleadoRoutes);
 app.use('/pedidos', authMiddleware, pedidoRoutes);
@@ -59,9 +61,11 @@ DetallePedido.belongsTo(Pedido, { foreignKey: 'pedidoId' });
 // Aplicar middleware de manejo de errores
 app.use(errorMiddleware);
 
+// Sincronizar modelos con la base de datos y arrancar el servidor
 sequelize.sync({ alter: true }).then(() => {
-  app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
+  const port = process.env.PORT || 3000; // Usar un puerto por defecto si no está definido
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
   });
 }).catch(error => {
   console.error('Error syncing database:', error);
