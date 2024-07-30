@@ -21,8 +21,8 @@ exports.getProductoById = async (req, res) => {
 
 exports.createProducto = async (req, res) => {
   try {
-    const { nombre, descripcion, precio, stock } = req.body;
-    const newProducto = await productoService.createProducto({ nombre, descripcion, precio, stock });
+    const { nombre, descripcion, precio, stock, imagenUrl } = req.body;  // Incluye imagenUrl
+    const newProducto = await productoService.createProducto({ nombre, descripcion, precio, stock, imagenUrl });
     res.status(201).json(newProducto);
   } catch (error) {
     res.status(500).json({ error: 'Error al crear producto' });
@@ -31,14 +31,15 @@ exports.createProducto = async (req, res) => {
 
 exports.updateProducto = async (req, res) => {
   try {
-    const { nombre, descripcion, precio, stock } = req.body;
-    const updatedProducto = await productoService.updateProducto(req.params.id, { nombre, descripcion, precio, stock });
+    const { nombre, descripcion, precio, stock, imagenUrl } = req.body;  // Incluye imagenUrl
+    const updatedProducto = await productoService.updateProducto(req.params.id, { nombre, descripcion, precio, stock, imagenUrl });
     if (!updatedProducto) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(updatedProducto);
   } catch (error) {
     res.status(500).json({ error: 'Error al actualizar producto' });
   }
 };
+
 
 exports.deleteProducto = async (req, res) => {
   try {

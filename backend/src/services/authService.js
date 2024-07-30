@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const Cliente = require('../models/cliente');
 const Empleado = require('../models/empleado');
 const Domiciliario = require('../models/domiciliario');
+const Role = require('../models/Role'); // Asegúrate de importar el modelo Role
 const nodemailer = require('nodemailer');
 
 // Configuración del transportador de correo
@@ -15,9 +16,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Función para generar un token JWT
-const generateToken = (id, userType) => {
-  return jwt.sign({ id, userType }, process.env.JWT_SECRET, { expiresIn: '1h' });
+// Función para generar un token JWT con información del rol
+const generateToken = (id, userType, roleId, roleName) => {
+  return jwt.sign({ id, userType, roleId, roleName }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 // Función para generar un token de restablecimiento
@@ -25,14 +26,20 @@ const generateResetToken = (email) => {
   return jwt.sign({ email }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
 };
 
-// Función para autenticar al usuario
+// Función para autenticar al usuario y obtener su rol
 const authenticateUser = async (Model, email, password) => {
-  const user = await Model.findOne({ where: { email } });
+  const user = await Model.findOne({ where: { email }, include: Role });
   if (!user || !(await bcrypt.compare(password, user.contraseña))) {
     throw new Error('Credenciales incorrectas');
   }
-  const token = generateToken(user.id, Model.name.toLowerCase());
-  return { token, userType: Model.name.toLowerCase() };
+  
+  // Verificamos que el usuario tenga un rol asignado
+  const userRole = user.Role || {};
+  const roleId = userRole.id || null;
+  const roleName = userRole.name || null;
+
+  const token = generateToken(user.id, Model.name.toLowerCase(), roleId, roleName);
+  return { token, userType: Model.name.toLowerCase(), roleId, roleName };
 };
 
 // Función principal para autenticar a cualquier tipo de usuario

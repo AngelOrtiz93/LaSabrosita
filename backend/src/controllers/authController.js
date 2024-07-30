@@ -12,8 +12,8 @@ const login = async (req, res) => {
 
   try {
     // Intento de autenticación
-    const { token, userType } = await authenticate(email, password);
-    res.json({ token, userType });
+    const { token, userType, roleId, roleName } = await authenticate(email, password);
+    res.json({ token, userType, roleId, roleName });
   } catch (error) {
     // Mensaje de error específico
     if (error.message === 'Invalid credentials') {

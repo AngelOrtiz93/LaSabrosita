@@ -30,7 +30,6 @@ const createProducto = async (data) => {
   }
 };
 
-// Actualizar un producto
 const updateProducto = async (id, data) => {
   try {
     const [updated] = await Producto.update(data, { where: { id } });
@@ -40,6 +39,7 @@ const updateProducto = async (id, data) => {
     throw new Error('Error al actualizar producto: ' + error.message);
   }
 };
+
 
 // Eliminar un producto
 const deleteProducto = async (id) => {
