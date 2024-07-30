@@ -1,4 +1,3 @@
-// src/routes/detallePedidoRoutes.js
 const express = require('express');
 const router = express.Router();
 const detallePedidoController = require('../controllers/detallePedidoController');

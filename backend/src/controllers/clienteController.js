@@ -1,4 +1,4 @@
-const Cliente = require('../models/cliente'); 
+const Cliente = require('../models/cliente');
 const bcrypt = require('bcrypt');
 
 exports.getAllClientes = async (req, res) => {

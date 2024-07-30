@@ -1,4 +1,3 @@
-// src/models/empleado.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -25,9 +24,11 @@ Empleado.init({
   },
   telefono: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   direccion: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   contraseña: {
     type: DataTypes.STRING,
@@ -44,6 +45,7 @@ Empleado.init({
 }, {
   sequelize,
   modelName: 'Empleado',
+  tableName: 'Empleados',
   timestamps: true,
 });
 

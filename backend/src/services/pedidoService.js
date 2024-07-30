@@ -1,65 +1,64 @@
-// src/services/pedidoService.js
-
 const Pedido = require('../models/pedido');
 
+// Obtener todos los pedidos
 const getAllPedidos = async () => {
   return await Pedido.findAll();
 };
 
+// Obtener un pedido por ID
 const getPedidoById = async (id) => {
   return await Pedido.findByPk(id);
 };
 
+// Crear un nuevo pedido
 const createPedido = async (data) => {
   return await Pedido.create(data);
 };
 
+// Actualizar un pedido
 const updatePedido = async (id, data) => {
   const pedido = await Pedido.findByPk(id);
   if (!pedido) throw new Error('Pedido not found');
   return await pedido.update(data);
 };
 
+// Eliminar un pedido
 const deletePedido = async (id) => {
   const pedido = await Pedido.findByPk(id);
   if (!pedido) throw new Error('Pedido not found');
   return await pedido.destroy();
 };
 
-// Función para obtener pedidos asignados a un domiciliario
+// Obtener pedidos asignados a un domiciliario
 const getPedidosAsignados = async (domiciliarioId) => {
   return await Pedido.findAll({
-    where: {
-      domiciliarioId: domiciliarioId
-    }
+    where: { domiciliarioId }
   });
 };
 
-// Función para contar pedidos completados
+// Contar pedidos completados por un domiciliario
 const countPedidosCompletados = async (domiciliarioId) => {
   return await Pedido.count({
     where: {
-      domiciliarioId: domiciliarioId,
-      estado: 'Completed' // Asume que 'estado' es el campo que indica si el pedido está completado
+      domiciliarioId,
+      estado: 'Completed'
     }
   });
 };
 
-// Función para obtener pedidos asignados a un empleado
+// Obtener pedidos asignados a un empleado
 const getPedidosAsignadosEmpleado = async (empleadoId) => {
   return await Pedido.findAll({
-    where: {
-      empleadoId: empleadoId
-    }
+    where: { empleadoId }
   });
 };
 
-// Función para contar pedidos completados por un empleado
+// Contar pedidos completados por un empleado
 const countPedidosCompletadosEmpleado = async (empleadoId) => {
   return await Pedido.count({
     where: {
-      empleadoId: empleadoId,
-      estado: 'Completed' // Asume que 'estado' es el campo que indica si el pedido está completado
+      empleadoId,
+      estado: 'Completed'
     }
   });
 };

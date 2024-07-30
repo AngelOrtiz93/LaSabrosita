@@ -1,10 +1,12 @@
+'use strict';
+
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('pedidos', {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('Pedidos', {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
-        primaryKey: true
+        primaryKey: true,
       },
       clienteId: {
         type: Sequelize.UUID,
@@ -12,7 +14,8 @@ module.exports = {
           model: 'Clientes',
           key: 'id'
         },
-        allowNull: false
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
       empleadoId: {
         type: Sequelize.UUID,
@@ -20,7 +23,8 @@ module.exports = {
           model: 'Empleados',
           key: 'id'
         },
-        allowNull: true
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       },
       domiciliarioId: {
         type: Sequelize.UUID,
@@ -28,25 +32,31 @@ module.exports = {
           model: 'Domiciliarios',
           key: 'id'
         },
-        allowNull: true
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE'
       },
       fechaPedido: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
-        allowNull: true
+        allowNull: true,
+      },
+      estado: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: 'Pending'
       },
       createdAt: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
       },
       updatedAt: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
       }
     });
   },
 
-  down: async (queryInterface) => {
-    await queryInterface.dropTable('pedidos');
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('Pedidos');
   }
 };

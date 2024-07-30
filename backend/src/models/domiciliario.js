@@ -24,9 +24,11 @@ Domiciliario.init({
   },
   telefono: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   direccion: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   fechaContratacion: {
     type: DataTypes.DATE,
@@ -39,6 +41,7 @@ Domiciliario.init({
 }, {
   sequelize,
   modelName: 'Domiciliario',
+  tableName: 'Domiciliarios',
   timestamps: false,
 });
 

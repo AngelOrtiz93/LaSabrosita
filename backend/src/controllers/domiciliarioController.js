@@ -6,7 +6,7 @@ exports.getAllDomiciliarios = async (req, res) => {
     const domiciliarios = await domiciliarioService.getAll();
     res.json(domiciliarios);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching domiciliarios' });
+    res.status(500).json({ error: 'Error al obtener domiciliarios' });
   }
 };
 
@@ -14,10 +14,10 @@ exports.getDomiciliarioById = async (req, res) => {
   try {
     const { id } = req.params;
     const domiciliario = await domiciliarioService.getById(id);
-    if (!domiciliario) return res.status(404).json({ error: 'Domiciliario not found' });
+    if (!domiciliario) return res.status(404).json({ error: 'Domiciliario no encontrado' });
     res.json(domiciliario);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching domiciliario' });
+    res.status(500).json({ error: 'Error al obtener domiciliario' });
   }
 };
 
@@ -35,7 +35,7 @@ exports.createDomiciliario = async (req, res) => {
     });
     res.status(201).json(newDomiciliario);
   } catch (error) {
-    res.status(500).json({ error: 'Error creating domiciliario' });
+    res.status(500).json({ error: 'Error al crear domiciliario' });
   }
 };
 
@@ -49,11 +49,11 @@ exports.updateDomiciliario = async (req, res) => {
       updates.contraseña = await bcrypt.hash(contraseña, 10);
     }
 
-    const updatedDomiciliario = await domiciliarioService.update(id, updates);
-    if (!updatedDomiciliario) return res.status(404).json({ error: 'Domiciliario not found' });
-    res.json(updatedDomiciliario);
+    const updated = await domiciliarioService.update(id, updates);
+    if (!updated) return res.status(404).json({ error: 'Domiciliario no encontrado' });
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating domiciliario' });
+    res.status(500).json({ error: 'Error al actualizar domiciliario' });
   }
 };
 
@@ -61,9 +61,9 @@ exports.deleteDomiciliario = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await domiciliarioService.delete(id);
-    if (!deleted) return res.status(404).json({ error: 'Domiciliario not found' });
+    if (!deleted) return res.status(404).json({ error: 'Domiciliario no encontrado' });
     res.status(200).json({ message: 'Domiciliario eliminado exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error deleting domiciliario' });
+    res.status(500).json({ error: 'Error al eliminar domiciliario' });
   }
 };

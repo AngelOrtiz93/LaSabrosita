@@ -4,17 +4,34 @@ const jwt = require('jsonwebtoken');
 // Función para el inicio de sesión
 const login = async (req, res) => {
   const { email, password } = req.body;
+
+  // Validación básica de entrada
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email y contraseña son requeridos' });
+  }
+
   try {
+    // Intento de autenticación
     const { token, userType } = await authenticate(email, password);
     res.json({ token, userType });
   } catch (error) {
-    res.status(401).json({ message: error.message });
+    // Mensaje de error específico
+    if (error.message === 'Invalid credentials') {
+      return res.status(401).json({ message: 'Email o contraseña incorrectos' });
+    }
+    res.status(500).json({ message: 'Error en el servidor al intentar iniciar sesión' });
   }
 };
 
 // Función para solicitar el correo de restablecimiento de contraseña
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
+
+  // Validación básica de entrada
+  if (!email) {
+    return res.status(400).json({ message: 'Email es requerido' });
+  }
+
   try {
     const user = await getUserByEmail(email);
     if (!user) {
@@ -30,10 +47,15 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-
 // Función para restablecer la contraseña
 const resetPasswordHandler = async (req, res) => {
   const { token, newPassword } = req.body;
+
+  // Validación básica de entrada
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Token y nueva contraseña son requeridos' });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
     const email = decoded.email;
@@ -42,7 +64,11 @@ const resetPasswordHandler = async (req, res) => {
 
     res.status(200).json({ message: 'Contraseña restablecida con éxito' });
   } catch (error) {
-    res.status(400).json({ message: 'Token inválido o expirado' });
+    // Mensaje de error específico para el token
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(400).json({ message: 'Token inválido o expirado' });
+    }
+    res.status(500).json({ message: 'Error al restablecer la contraseña' });
   }
 };
 

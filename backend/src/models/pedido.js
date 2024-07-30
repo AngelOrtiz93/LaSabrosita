@@ -1,5 +1,3 @@
-// src/models/pedido.js
-
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -14,7 +12,7 @@ Pedido.init({
   clienteId: {
     type: DataTypes.UUID,
     references: {
-      model: 'Clientes', // Nombre de la tabla en la base de datos
+      model: 'Clientes',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -23,7 +21,7 @@ Pedido.init({
   empleadoId: {
     type: DataTypes.UUID,
     references: {
-      model: 'Empleados', // Nombre de la tabla en la base de datos
+      model: 'Empleados',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -32,7 +30,7 @@ Pedido.init({
   domiciliarioId: {
     type: DataTypes.UUID,
     references: {
-      model: 'Domiciliarios', // Nombre de la tabla en la base de datos
+      model: 'Domiciliarios',
       key: 'id'
     },
     onDelete: 'SET NULL',
@@ -43,16 +41,17 @@ Pedido.init({
     defaultValue: DataTypes.NOW,
     allowNull: true,
   },
-  estado: { // Añade este campo si aún no está en el modelo
+  estado: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'Pending' // Valor por defecto
+    defaultValue: 'Pending'
   }
 }, {
   sequelize,
-  modelName: 'pedidos',
+  modelName: 'Pedido',
+  tableName: 'Pedidos',
   timestamps: true,
-  underscored: true
+  underscored: true,
 });
 
 module.exports = Pedido;

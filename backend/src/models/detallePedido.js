@@ -1,9 +1,12 @@
-const { DataTypes } = require('sequelize');
+// src/models/detallePedido.js
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Producto = require('./producto');
-const Pedido = require('./pedido');     
+const Pedido = require('./pedido');
 
-const DetallePedido = sequelize.define('DetallePedido', {
+class DetallePedido extends Model {}
+
+DetallePedido.init({
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -20,20 +23,26 @@ const DetallePedido = sequelize.define('DetallePedido', {
   productoId: {
     type: DataTypes.UUID,
     references: {
-      model: 'Productos', 
+      model: Producto,
       key: 'id'
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   pedidoId: {
     type: DataTypes.UUID,
     references: {
-      model: 'pedidos', 
+      model: Pedido,
       key: 'id'
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   }
 }, {
+  sequelize,
+  modelName: 'DetallePedido',
+  tableName: 'DetallePedidos',
   timestamps: false,
-  tableName: 'DetallePedidos' 
 });
 
 module.exports = DetallePedido;

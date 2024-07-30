@@ -1,34 +1,31 @@
-const Empleado = require('../models/empleado');
+const empleadoService = require('../services/empleadoService');
 const bcrypt = require('bcrypt');
 
 exports.getAllEmpleados = async (req, res) => {
   try {
-    const empleados = await Empleado.findAll();
+    const empleados = await empleadoService.getAllEmpleados();
     res.json(empleados);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching empleados' });
+    res.status(500).json({ error: 'Error al obtener empleados' });
   }
 };
 
 exports.getEmpleadoById = async (req, res) => {
   try {
     const { id } = req.params;
-    const empleado = await Empleado.findByPk(id);
-    if (!empleado) return res.status(404).json({ error: 'Empleado not found' });
+    const empleado = await empleadoService.getEmpleadoById(id);
+    if (!empleado) return res.status(404).json({ error: 'Empleado no encontrado' });
     res.json(empleado);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching empleado' });
+    res.status(500).json({ error: 'Error al obtener empleado' });
   }
 };
 
 exports.createEmpleado = async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
-    
-    // Hashear la contraseña antes de guardar
     const hashedPassword = await bcrypt.hash(contraseña, 10);
-
-    const newEmpleado = await Empleado.create({
+    const newEmpleado = await empleadoService.createEmpleado({
       nombre,
       apellido,
       email,
@@ -36,11 +33,9 @@ exports.createEmpleado = async (req, res) => {
       direccion,
       contraseña: hashedPassword,
     });
-
     res.status(201).json(newEmpleado);
   } catch (error) {
-    console.error('Error creating empleado:', error);
-    res.status(500).json({ error: 'Error creating empleado' });
+    res.status(500).json({ error: 'Error al crear empleado' });
   }
 };
 
@@ -48,40 +43,27 @@ exports.updateEmpleado = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
-    
     const updates = { nombre, apellido, email, telefono, direccion };
 
     if (contraseña) {
       updates.contraseña = await bcrypt.hash(contraseña, 10);
     }
 
-    const [updated] = await Empleado.update(updates, {
-      where: { id }
-    });
-
-    if (updated) {
-      const updatedEmpleado = await Empleado.findByPk(id);
-      res.json(updatedEmpleado);
-    } else {
-      res.status(404).json({ error: 'Empleado not found' });
-    }
+    const updatedEmpleado = await empleadoService.updateEmpleado(id, updates);
+    if (!updatedEmpleado) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.json(updatedEmpleado);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating empleado' });
+    res.status(500).json({ error: 'Error al actualizar empleado' });
   }
 };
 
 exports.deleteEmpleado = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Empleado.destroy({
-      where: { id }
-    });
-    if (deleted) {
-      res.status(204).end();
-    } else {
-      res.status(404).json({ error: 'Empleado not found' });
-    }
+    const result = await empleadoService.deleteEmpleado(id);
+    if (!result) return res.status(404).json({ error: 'Empleado no encontrado' });
+    res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ error: 'Error deleting empleado' });
+    res.status(500).json({ error: 'Error al eliminar empleado' });
   }
 };

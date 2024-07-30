@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const Producto = sequelize.define('Productos', { // Aquí el nombre de la tabla es 'Productos'
+const Producto = sequelize.define('Producto', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -17,6 +17,7 @@ const Producto = sequelize.define('Productos', { // Aquí el nombre de la tabla 
   },
   descripcion: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   stock: {
     type: DataTypes.INTEGER,
@@ -24,6 +25,7 @@ const Producto = sequelize.define('Productos', { // Aquí el nombre de la tabla 
   }
 }, {
   timestamps: false,
+  tableName: 'Productos'
 });
 
-module.exports = Producto; // Exporta Producto
+module.exports = Producto;

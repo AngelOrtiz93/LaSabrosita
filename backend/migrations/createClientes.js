@@ -1,53 +1,46 @@
-// migrations/createClientes.js
+'use strict';
+
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Clientes', {
-      ID_Cliente: {
+      id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
-        primaryKey: true
+        primaryKey: true,
       },
-      Nombre: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      Apellido: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      Email: {
+      nombre: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
       },
-      Telefono: {
+      apellido: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: false,
       },
-      Direccion: {
+      email: {
         type: Sequelize.STRING,
-        allowNull: true
+        unique: true,
+        allowNull: false,
       },
-      Fecha_Registro: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      },
-      Contraseña: {
+      telefono: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true,
       },
-      createdAt: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+      direccion: {
+        type: Sequelize.STRING,
+        allowNull: true,
       },
-      updatedAt: {
+      fechaRegistro: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      }
+        defaultValue: Sequelize.NOW,
+      },
+      contraseña: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
     });
   },
 
-  down: async (queryInterface) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Clientes');
   }
 };

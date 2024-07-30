@@ -5,7 +5,7 @@ const Empleado = require('../models/empleado');
 const Domiciliario = require('../models/domiciliario');
 const nodemailer = require('nodemailer');
 
-// Configura el transportador de correo
+// Configuración del transportador de correo
 const transporter = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",
   port: 2525,
@@ -28,40 +28,33 @@ const generateResetToken = (email) => {
 // Función para autenticar al usuario
 const authenticateUser = async (Model, email, password) => {
   const user = await Model.findOne({ where: { email } });
-  if (!user) return null;
-  const isMatch = await bcrypt.compare(password, user.contraseña);
-  if (!isMatch) throw new Error('Contraseña incorrecta');
+  if (!user || !(await bcrypt.compare(password, user.contraseña))) {
+    throw new Error('Credenciales incorrectas');
+  }
   const token = generateToken(user.id, Model.name.toLowerCase());
   return { token, userType: Model.name.toLowerCase() };
 };
 
 // Función principal para autenticar a cualquier tipo de usuario
 const authenticate = async (email, password) => {
-  let result;
-
-  result = await authenticateUser(Cliente, email, password);
-  if (result) return result;
-
-  result = await authenticateUser(Empleado, email, password);
-  if (result) return result;
-
-  result = await authenticateUser(Domiciliario, email, password);
-  if (result) return result;
-
+  const models = [Cliente, Empleado, Domiciliario];
+  for (const Model of models) {
+    try {
+      return await authenticateUser(Model, email, password);
+    } catch (error) {
+      // Continuar al siguiente modelo si no se encuentra el usuario
+    }
+  }
   throw new Error('Usuario no encontrado');
 };
 
 // Función para obtener un usuario por correo electrónico
 const getUserByEmail = async (email) => {
-  let user = await Cliente.findOne({ where: { email } });
-  if (user) return user;
-
-  user = await Empleado.findOne({ where: { email } });
-  if (user) return user;
-
-  user = await Domiciliario.findOne({ where: { email } });
-  if (user) return user;
-
+  const models = [Cliente, Empleado, Domiciliario];
+  for (const Model of models) {
+    const user = await Model.findOne({ where: { email } });
+    if (user) return user;
+  }
   return null;
 };
 
@@ -78,24 +71,14 @@ const sendResetEmail = async (email, resetToken) => {
 // Función para restablecer la contraseña del usuario
 const resetPassword = async (email, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);
-  let user = await Cliente.findOne({ where: { email } });
-  if (user) {
-    await Cliente.update({ contraseña: hashedPassword }, { where: { email } });
-    return { message: 'Contraseña restablecida exitosamente' };
+  const models = [Cliente, Empleado, Domiciliario];
+  for (const Model of models) {
+    const user = await Model.findOne({ where: { email } });
+    if (user) {
+      await Model.update({ contraseña: hashedPassword }, { where: { email } });
+      return { message: 'Contraseña restablecida exitosamente' };
+    }
   }
-
-  user = await Empleado.findOne({ where: { email } });
-  if (user) {
-    await Empleado.update({ contraseña: hashedPassword }, { where: { email } });
-    return { message: 'Contraseña restablecida exitosamente' };
-  }
-
-  user = await Domiciliario.findOne({ where: { email } });
-  if (user) {
-    await Domiciliario.update({ contraseña: hashedPassword }, { where: { email } });
-    return { message: 'Contraseña restablecida exitosamente' };
-  }
-
   throw new Error('Usuario no encontrado');
 };
 

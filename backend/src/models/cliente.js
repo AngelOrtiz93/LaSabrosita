@@ -1,6 +1,5 @@
-// src/models/cliente.js
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Ajusta la ruta según tu configuración
+const sequelize = require('../config/db');
 
 class Cliente extends Model {}
 
@@ -20,7 +19,7 @@ Cliente.init({
   },
   email: {
     type: DataTypes.STRING,
-    unique: true, // Asegúrate de que esta propiedad esté configurada
+    unique: true,
     allowNull: false,
   },
   telefono: {
@@ -42,6 +41,8 @@ Cliente.init({
 }, {
   sequelize,
   modelName: 'Cliente',
+  tableName: 'Clientes',
+  timestamps: false,
 });
 
 module.exports = Cliente;
