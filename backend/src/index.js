@@ -33,7 +33,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/auth', authRoutes); // Rutas públicas de autenticación
-app.use('/clientes', authMiddleware, clienteRoutes);
+app.use('/clientes', clienteRoutes);
 app.use('/domiciliarios', authMiddleware, domiciliarioRoutes);
 app.use('/empleados', authMiddleware, empleadoRoutes);
 app.use('/pedidos', authMiddleware, pedidoRoutes);
