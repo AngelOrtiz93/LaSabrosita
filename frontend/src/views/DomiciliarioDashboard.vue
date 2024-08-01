@@ -1,74 +1,36 @@
 <template>
   <a-layout class="domiciliario-dashboard-layout">
     <a-layout-header class="header">
-      <div class="logo" />
+      <div class="logo">
+        <img src="@/assets/logo.png" alt="Logo" />
+      </div>
       <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
-        <a-menu-item key="1">Home</a-menu-item>
-        <a-menu-item key="2">Pedidos Asignados</a-menu-item>
-        <a-menu-item key="3">Pedidos Completados</a-menu-item>
-        <a-menu-item key="4" @click="logout">Logout</a-menu-item>
+        <a-menu-item key="1" @click="navigateTo('/domiciliario-dashboard')">Inicio</a-menu-item>
+        <a-menu-item key="2" @click="navigateTo('/domiciliario-dashboard/tareas')">Tareas</a-menu-item>
+        <a-menu-item key="3" @click="navigateTo('/domiciliario-dashboard/perfil')">Perfil</a-menu-item>
+        <a-menu-item key="4" @click="logout">Cerrar Sesión</a-menu-item>
       </a-menu>
     </a-layout-header>
     <a-layout-content class="content">
-      <div class="site-layout-content">
-        <h1>Pedidos Asignados</h1>
-        <a-row :gutter="16">
-          <a-col :span="8" v-for="pedido in pedidosAsignados" :key="pedido.id">
-            <a-card :title="pedido.nombre">
-              <p>{{ pedido.descripcion }}</p>
-              <p>{{ pedido.fechaPedido }}</p>
-            </a-card>
-          </a-col>
-        </a-row>
-        <h1>Pedidos Completados</h1>
-        <p>Total: {{ pedidosCompletadosCount }}</p>
-      </div>
+      <router-view></router-view>
     </a-layout-content>
     <a-layout-footer class="footer">Fast Food Restaurant ©2024</a-layout-footer>
   </a-layout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
-import { getPedidosAsignadosDomiciliario, countPedidosCompletadosDomiciliario } from '@/api/pedido';
 import { useRouter } from 'vue-router';
 
-const pedidosAsignados = ref([]);
-const pedidosCompletadosCount = ref(0);
 const router = useRouter();
-
-const token = localStorage.getItem('token');
-const domiciliarioId = localStorage.getItem('domiciliarioId'); // Asegúrate de que este valor esté almacenado en el localStorage
-
-const fetchPedidosAsignados = async () => {
-  try {
-    const response = await getPedidosAsignadosDomiciliario(domiciliarioId, token);
-    pedidosAsignados.value = response.data;
-  } catch (error) {
-    message.error('Error loading assigned pedidos');
-  }
-};
-
-const fetchPedidosCompletadosCount = async () => {
-  try {
-    const response = await countPedidosCompletadosDomiciliario(domiciliarioId, token);
-    pedidosCompletadosCount.value = response.data.count;
-  } catch (error) {
-    message.error('Error counting completed pedidos');
-  }
-};
 
 const logout = () => {
   localStorage.removeItem('token');
-  localStorage.removeItem('domiciliarioId'); 
   router.push('/login');
 };
 
-onMounted(() => {
-  fetchPedidosAsignados();
-  fetchPedidosCompletadosCount();
-});
+const navigateTo = (path) => {
+  router.push(path);
+};
 </script>
 
 <style scoped>
@@ -79,23 +41,24 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #001529;
+  padding: 0 20px;
+  height: 64px;
 }
 .logo {
-  width: 120px;
-  height: 31px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 16px 24px 16px 0;
-  float: left;
+  width: 260px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+.logo img {
+  width: 100%;
+  height: auto;
 }
 .content {
   padding: 50px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.site-layout-content {
-  width: 100%;
-  max-width: 1200px;
+  justify-content: center;
 }
 .footer {
   text-align: center;

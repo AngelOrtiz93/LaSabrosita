@@ -1,41 +1,25 @@
 <template>
   <a-layout class="cliente-dashboard-layout">
     <a-layout-header class="header">
-      <div class="logo" />
-      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
-        <a-menu-item key="1">Home</a-menu-item>
-        <a-menu-item key="2">Products</a-menu-item>
-        <a-menu-item key="3">Profile</a-menu-item>
+      <div class="logo">
+        <img src="@/assets/logo.png" alt="Logo" />
+      </div>
+      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['2']">
+        <a-menu-item key="1" @click="navigateTo('/cliente-dashboard')">Home</a-menu-item>
+        <a-menu-item key="2" @click="navigateTo('/cliente-dashboard/products')">Products</a-menu-item>
+        <a-menu-item key="3" @click="navigateTo('/cliente-dashboard/profile')">Profile</a-menu-item>
         <a-menu-item key="4" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
     <a-layout-content class="content">
-      <div class="site-layout-content">
-        <h1>Our Menu</h1>
-        <a-row :gutter="16">
-          <a-col :span="8" v-for="product in products" :key="product.id">
-            <a-card :title="product.nombre">
-              <img :src="product.imagenUrl" alt="Product Image" class="product-image"/>
-              <p>{{ product.descripcion }}</p>
-              <p>$ {{ product.precio | currency }}</p>
-            </a-card>
-          </a-col>
-        </a-row>
-      </div>
+      <router-view></router-view>
     </a-layout-content>
     <a-layout-footer class="footer">Fast Food Restaurant ©2024</a-layout-footer>
   </a-layout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
-import { getProducts } from '@/api/producto';
 import { useRouter } from 'vue-router';
-
-const products = ref([]);
-
-const token = localStorage.getItem('token');
 
 const router = useRouter();
 
@@ -44,14 +28,9 @@ const logout = () => {
   router.push('/login');
 };
 
-onMounted(async () => {
-  try {
-    const response = await getProducts(token);
-    products.value = response.data;
-  } catch (error) {
-    message.error('Error loading products');
-  }
-});
+const navigateTo = (path) => {
+  router.push(path);
+};
 </script>
 
 <style scoped>
@@ -62,31 +41,26 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #001529;
+  padding: 0 20px;
+  height: 64px;
 }
 .logo {
-  width: 120px;
-  height: 31px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 16px 24px 16px 0;
-  float: left;
+  width: 260px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+.logo img {
+  width: 100%;
+  height: auto;
 }
 .content {
   padding: 50px;
   display: flex;
   justify-content: center;
 }
-.site-layout-content {
-  width: 100%;
-  max-width: 1200px;
-}
 .footer {
   text-align: center;
-}
-.product-image {
-  width: 100%;
-  height: auto;
-  max-height: 200px; /* Ajusta según tus necesidades */
-  object-fit: cover;
-  margin-bottom: 16px;
 }
 </style>

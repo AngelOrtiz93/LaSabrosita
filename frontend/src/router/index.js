@@ -38,18 +38,66 @@ const routes = [
   },
   {
     path: '/cliente-dashboard',
-    name: 'ClienteDashboard',
-    component: ClienteDashboard
+    component: ClienteDashboard,
+    children: [
+      {
+        path: '',
+        name: 'ClienteDashboardHome',
+        component: () => import('@/views/Cliente/ClienteDashboardHome.vue') // Agrega tu vista de inicio aquí
+      },
+      {
+        path: 'profile',
+        name: 'ClienteDashboardProfile',
+        component: () => import('@/views/Cliente/ClienteDashboardProfile.vue') // Agrega tu vista de perfil aquí
+      },
+      {
+        path: 'products',
+        name: 'ClienteDashboardProducts',
+        component: () => import('@/views/Cliente/ClienteDashboardProducts.vue') // Vista de productos
+      }
+    ]
   },
   {
     path: '/empleado-dashboard',
-    name: 'EmpleadoDashboard',
-    component: EmpleadoDashboard
+    component: EmpleadoDashboard,
+    children: [
+      {
+        path: '',
+        name: 'EmpleadoDashboardHome',
+        component: () => import('@/views/Empleado/EmpleadoDashboardHome.vue') // Vista de inicio para empleado
+      },
+      {
+        path: 'tasks',
+        name: 'EmpleadoDashboardTasks',
+        component: () => import('@/views/Empleado/EmpleadoDashboardTasks.vue') // Vista de inicio para empleado
+      },
+      {
+        path: 'profile',
+        name: 'EmpleadoDashboardProfile',
+        component: () => import('@/views/Empleado/EmpleadoDashboardProfile.vue') // Vista de perfil para empleado
+      }
+    ]
   },
   {
     path: '/domiciliario-dashboard',
-    name: 'DomiciliarioDashboard',
-    component: DomiciliarioDashboard
+    component: DomiciliarioDashboard,
+    children: [
+      {
+        path: '',
+        name: 'DomiciliarioDashboardHome',
+        component: () => import('@/views/Domiciliario/DomiciliarioDashboardHome.vue') // Vista de inicio para domiciliario
+      },
+      {
+        path: 'tareas',
+        name: 'DomiciliarioDashboardTasks',
+        component: () => import('@/views/Domiciliario/DomiciliarioDashboardTareas.vue') // Vista de inicio para domiciliario
+      },
+      {
+        path: 'perfil',
+        name: 'DomiciliarioDashboardPerfil',
+        component: () => import('@/views/Domiciliario/DomiciliarioDashboardPerfil.vue') // Vista de perfil para domiciliario
+      }
+    ]
   }
 ];
 
