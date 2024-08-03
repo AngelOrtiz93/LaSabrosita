@@ -6,7 +6,7 @@
       </div>
       <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
         <a-menu-item key="1" @click="navigateTo('/administrador-dashboard')">Home</a-menu-item>
-        <a-menu-item key="2" @click="navigateTo('/administrador-dashboard/profile')">Profile</a-menu-item>
+        <a-menu-item key="2" @click="navigateTo('/empleado-dashboard/profile')">Profile</a-menu-item>
         <a-menu-item key="3" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
