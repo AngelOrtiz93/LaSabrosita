@@ -10,7 +10,7 @@ const authorize = (requiredPermission) => async (req, res, next) => {
       return res.status(401).json({ message: 'Usuario no autenticado' });
     }
 
-    // Encuentra el rol del usuario
+    // Encuentra el rol del usuario, asegurándote de que sea una instancia Sequelize con sus permisos cargados
     const role = await Role.findByPk(user.roleId, {
       include: {
         model: Permission,

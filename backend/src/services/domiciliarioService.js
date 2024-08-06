@@ -1,16 +1,15 @@
-const Domiciliario = require('../models/domiciliario');
+const Domiciliario = require('../models/usuario'); // Cambia la ruta si es necesario
 
-// Obtener todos los domiciliarios
-exports.getAll = async () => {
+const getAllDomiciliarios = async (roleId) => {
   try {
-    return await Domiciliario.findAll();
+    // Devuelve solo los domiciliarios con el roleId especificado
+    return await Domiciliario.findAll({ where: { roleId } });
   } catch (error) {
     throw new Error('Error al obtener domiciliarios: ' + error.message);
   }
 };
 
-// Obtener un domiciliario por ID
-exports.getById = async (id) => {
+const getDomiciliarioById = async (id) => {
   try {
     const domiciliario = await Domiciliario.findByPk(id);
     if (!domiciliario) throw new Error('Domiciliario no encontrado');
@@ -20,8 +19,7 @@ exports.getById = async (id) => {
   }
 };
 
-// Crear un nuevo domiciliario
-exports.create = async (data) => {
+const createDomiciliario = async (data) => {
   try {
     return await Domiciliario.create(data);
   } catch (error) {
@@ -30,10 +28,9 @@ exports.create = async (data) => {
   }
 };
 
-// Actualizar un domiciliario
-exports.update = async (id, updates) => {
+const updateDomiciliario = async (id, data) => {
   try {
-    const [updated] = await Domiciliario.update(updates, { where: { id } });
+    const [updated] = await Domiciliario.update(data, { where: { id } });
     if (!updated) throw new Error('Domiciliario no encontrado');
     return await Domiciliario.findByPk(id);
   } catch (error) {
@@ -41,8 +38,7 @@ exports.update = async (id, updates) => {
   }
 };
 
-// Eliminar un domiciliario
-exports.delete = async (id) => {
+const deleteDomiciliario = async (id) => {
   try {
     const deleted = await Domiciliario.destroy({ where: { id } });
     if (!deleted) throw new Error('Domiciliario no encontrado');
@@ -50,4 +46,12 @@ exports.delete = async (id) => {
   } catch (error) {
     throw new Error('Error al eliminar domiciliario: ' + error.message);
   }
+};
+
+module.exports = {
+  getAllDomiciliarios,
+  getDomiciliarioById,
+  createDomiciliario,
+  updateDomiciliario,
+  deleteDomiciliario
 };

@@ -7,7 +7,7 @@ const authorize = require('../middleware/authorize');
 
 // Rutas para permisos
 router.post('/', authMiddleware, authorize('Crear Permiso'), permissionController.createPermission);
-router.get('/', authMiddleware, authorize('Obtener Todos los Permisos'), permissionController.getAllPermissions);
+router.get('/', permissionController.getAllPermissions);
 router.get('/:id', authMiddleware, authorize('Obtener Permiso por ID'), permissionController.getPermissionById);
 router.put('/:id', authMiddleware, authorize('Actualizar Permiso'), permissionController.updatePermission);
 router.delete('/:id', authMiddleware, authorize('Eliminar Permiso'), permissionController.deletePermission);

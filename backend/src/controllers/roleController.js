@@ -1,4 +1,3 @@
-// src/controllers/roleController.js
 const Role = require('../models/Role');
 const Permission = require('../models/permission');
 const RolePermission = require('../models/rolePermission');
@@ -7,27 +6,32 @@ const RolePermission = require('../models/rolePermission');
 exports.createRole = async (req, res) => {
   try {
     const { nombre, permisos } = req.body;
-    const newRole = await Role.create({ nombre });
-    
+    const newRole = await Role.create({ name: nombre });
+
     if (permisos && permisos.length > 0) {
       await Promise.all(permisos.map(permissionId => 
         RolePermission.create({ roleId: newRole.id, permissionId })
       ));
     }
-    
+
     res.status(201).json(newRole);
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear rol' });
+    res.status(500).json({ error: 'Error al crear rol', details: error.message });
   }
 };
 
 // Obtener todos los roles
 exports.getAllRoles = async (req, res) => {
   try {
-    const roles = await Role.findAll();
+    const roles = await Role.findAll({
+      include: {
+        model: Permission,
+        through: { attributes: [] }
+      }
+    });
     res.json(roles);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener roles' });
+    res.status(500).json({ error: 'Error al obtener roles', details: error.message });
   }
 };
 
@@ -46,7 +50,7 @@ exports.getRoleById = async (req, res) => {
       res.status(404).json({ error: 'Rol no encontrado' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener rol' });
+    res.status(500).json({ error: 'Error al obtener rol', details: error.message });
   }
 };
 
@@ -57,7 +61,7 @@ exports.updateRole = async (req, res) => {
     const role = await Role.findByPk(req.params.id);
     if (!role) throw new Error('Rol no encontrado');
 
-    await role.update({ nombre });
+    await role.update({ name: nombre });
     
     await RolePermission.destroy({ where: { roleId: role.id } });
     
@@ -69,7 +73,7 @@ exports.updateRole = async (req, res) => {
 
     res.json(role);
   } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar rol' });
+    res.status(500).json({ error: 'Error al actualizar rol', details: error.message });
   }
 };
 
@@ -85,6 +89,6 @@ exports.deleteRole = async (req, res) => {
       res.status(404).json({ error: 'Rol no encontrado' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar rol' });
+    res.status(500).json({ error: 'Error al eliminar rol', details: error.message });
   }
 };

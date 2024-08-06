@@ -1,9 +1,12 @@
 const empleadoService = require('../services/empleadoService');
 const bcrypt = require('bcrypt');
 
+// ID del rol de empleado
+const EMPLEADO_ROLE_ID = '75072156-018a-4015-aab4-64801d8b6d03';
+
 exports.getAllEmpleados = async (req, res) => {
   try {
-    const empleados = await empleadoService.getAllEmpleados();
+    const empleados = await empleadoService.getAllEmpleados(); // Solo empleados con roleId específico
     res.json(empleados);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener empleados' });
@@ -32,6 +35,7 @@ exports.createEmpleado = async (req, res) => {
       telefono,
       direccion,
       contraseña: hashedPassword,
+      tipoUsuario: 'Empleado'
     });
     res.status(201).json(newEmpleado);
   } catch (error) {

@@ -1,8 +1,6 @@
 const jwt = require('jsonwebtoken');
 const Role = require('../models/Role');
-const Cliente = require('../models/cliente');
-const Empleado = require('../models/empleado');
-const Domiciliario = require('../models/domiciliario');
+const Usuario = require('../models/usuario');  // Asegúrate de que la ruta sea correcta
 
 module.exports = async (req, res, next) => {
   // Obtener el token del encabezado Authorization
@@ -12,8 +10,8 @@ module.exports = async (req, res, next) => {
     return res.status(401).json({ message: 'Token no proporcionado' });
   }
 
-  // El token debería estar directamente en el encabezado
-  const token = authHeader.replace('Bearer ', ''); // Si usabas 'Bearer ', remueve el prefijo
+  // El token debería estar directamente en el encabezado sin 'Bearer '
+  const token = authHeader;  // Se asume que el token ya está limpio
 
   if (!token) {
     return res.status(401).json({ message: 'Token no proporcionado' });
@@ -23,34 +21,18 @@ module.exports = async (req, res, next) => {
     // Verificar y decodificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Obtener el tipo de usuario y el ID del usuario desde el token
-    const { id, userType } = decoded;
-
-    // Determinar el modelo según el tipo de usuario
-    let UserModel;
-    switch (userType) {
-      case 'cliente':
-        UserModel = Cliente;
-        break;
-      case 'empleado':
-        UserModel = Empleado;
-        break;
-      case 'domiciliario':
-        UserModel = Domiciliario;
-        break;
-      default:
-        return res.status(400).json({ message: 'Tipo de usuario no válido' });
-    }
+    // Obtener el ID del usuario desde el token
+    const { id } = decoded;
 
     // Obtener el usuario desde la base de datos
-    const user = await UserModel.findByPk(id);
+    const usuario = await Usuario.findByPk(id, { include: Role });
 
-    if (!user) {
+    if (!usuario) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
     // Obtener el rol del usuario
-    const role = await Role.findByPk(user.roleId);
+    const role = usuario.Role;
 
     if (!role) {
       return res.status(404).json({ message: 'Rol no encontrado' });
@@ -58,9 +40,8 @@ module.exports = async (req, res, next) => {
 
     // Agregar el usuario y el rol al objeto request para su uso posterior
     req.user = {
-      id: user.id,
-      userType,
-      roleId: user.roleId,
+      id: usuario.id,
+      roleId: role.id,
       roleName: role.name
     };
 

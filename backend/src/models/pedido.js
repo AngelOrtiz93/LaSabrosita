@@ -9,31 +9,13 @@ Pedido.init({
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  clienteId: {
+  usuarioId: {
     type: DataTypes.UUID,
     references: {
-      model: 'Clientes',
+      model: 'Usuarios',
       key: 'id'
     },
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  },
-  empleadoId: {
-    type: DataTypes.UUID,
-    references: {
-      model: 'Empleados',
-      key: 'id'
-    },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-  },
-  domiciliarioId: {
-    type: DataTypes.UUID,
-    references: {
-      model: 'Domiciliarios',
-      key: 'id'
-    },
-    onDelete: 'SET NULL',
     onUpdate: 'CASCADE'
   },
   fechaPedido: {

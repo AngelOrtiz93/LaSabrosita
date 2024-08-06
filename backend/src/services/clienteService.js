@@ -1,28 +1,18 @@
-// src/services/clienteService.js
-const { Cliente } = require('../models/cliente');
+const Cliente = require('../models/usuario'); // Asegúrate de que el modelo se llame `Cliente` y esté en el lugar correcto
 
-// Obtener todos los clientes
-const getAllClientes = async () => {
-  return await Cliente.findAll();
-};
-
-// Obtener un cliente por ID
-const getClienteById = async (id) => {
-  return await Cliente.findByPk(id);
-};
-
-// Crear un nuevo clienteconst { Cliente } = require('../models/cliente');
-
-// Obtener todos los clientes
-const getAllClientes = async () => {
+const getAllClientes = async (roleId) => {
   try {
-    return await Cliente.findAll();
+    // Si no se proporciona roleId, devuelve todos los clientes
+    if (!roleId) {
+      return await Cliente.findAll();
+    }
+    // Devuelve solo los clientes con el roleId especificado
+    return await Cliente.findAll({ where: { roleId } });
   } catch (error) {
     throw new Error('Error al obtener clientes: ' + error.message);
   }
 };
 
-// Obtener un cliente por ID
 const getClienteById = async (id) => {
   try {
     const cliente = await Cliente.findByPk(id);
@@ -33,61 +23,33 @@ const getClienteById = async (id) => {
   }
 };
 
-// Crear un nuevo cliente
 const createCliente = async (data) => {
   try {
     return await Cliente.create(data);
   } catch (error) {
+    console.error('Error al crear cliente:', error);
     throw new Error('Error al crear cliente: ' + error.message);
   }
 };
 
-// Actualizar un cliente
 const updateCliente = async (id, data) => {
   try {
-    const cliente = await Cliente.findByPk(id);
-    if (!cliente) throw new Error('Cliente no encontrado');
-    return await cliente.update(data);
+    const [updated] = await Cliente.update(data, { where: { id } });
+    if (!updated) throw new Error('Cliente no encontrado');
+    return await Cliente.findByPk(id);
   } catch (error) {
     throw new Error('Error al actualizar cliente: ' + error.message);
   }
 };
 
-// Eliminar un cliente
 const deleteCliente = async (id) => {
   try {
-    const cliente = await Cliente.findByPk(id);
-    if (!cliente) throw new Error('Cliente no encontrado');
-    return await cliente.destroy();
+    const deleted = await Cliente.destroy({ where: { id } });
+    if (!deleted) throw new Error('Cliente no encontrado');
+    return { message: 'Cliente eliminado exitosamente' };
   } catch (error) {
     throw new Error('Error al eliminar cliente: ' + error.message);
   }
-};
-
-module.exports = {
-  getAllClientes,
-  getClienteById,
-  createCliente,
-  updateCliente,
-  deleteCliente
-};
-
-const createCliente = async (data) => {
-  return await Cliente.create(data);
-};
-
-// Actualizar un cliente
-const updateCliente = async (id, data) => {
-  const cliente = await Cliente.findByPk(id);
-  if (!cliente) throw new Error('Cliente no encontrado');
-  return await cliente.update(data);
-};
-
-// Eliminar un cliente
-const deleteCliente = async (id) => {
-  const cliente = await Cliente.findByPk(id);
-  if (!cliente) throw new Error('Cliente no encontrado');
-  return await cliente.destroy();
 };
 
 module.exports = {

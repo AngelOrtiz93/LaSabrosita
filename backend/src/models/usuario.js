@@ -1,9 +1,9 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class Domiciliario extends Model {}
+class Usuarios extends Model {}
 
-Domiciliario.init({
+Usuarios.init({
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -30,19 +30,23 @@ Domiciliario.init({
     type: DataTypes.STRING,
     allowNull: true,
   },
-  fechaContratacion: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
   contraseña: {
     type: DataTypes.STRING,
     allowNull: false,
-  }
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   sequelize,
-  modelName: 'Domiciliario',
-  tableName: 'Domiciliarios',
-  timestamps: false,
+  modelName: 'Usuarios',
+  tableName: 'Usuarios',
+  timestamps: true,
 });
 
-module.exports = Domiciliario;
+module.exports = Usuarios;

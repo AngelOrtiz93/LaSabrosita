@@ -1,4 +1,3 @@
-// src/routes/domiciliarioRoutes.js
 const express = require('express');
 const router = express.Router();
 const domiciliarioController = require('../controllers/domiciliarioController');

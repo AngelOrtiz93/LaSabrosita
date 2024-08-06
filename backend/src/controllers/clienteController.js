@@ -1,106 +1,70 @@
-const Cliente = require('../models/cliente');
-const Role = require('../models/Role');
+const usuarioService = require('../services/clienteService');
 const bcrypt = require('bcrypt');
 
-// Obtener todos los clientes
 exports.getAllClientes = async (req, res) => {
   try {
-    const clientes = await Cliente.findAll();
+    const roleId = '172064d1-394e-4da9-8761-63dcdcc57c10'; // Puedes cambiar esto a un parámetro de consulta si es necesario
+    const clientes = await usuarioService.getAllClientes(roleId); // Pasa el roleId al servicio
     res.json(clientes);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener clientes' });
   }
 };
 
-// Crear un nuevo cliente
+exports.getClienteById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cliente = await usuarioService.getClienteById(id);
+    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.json(cliente);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener cliente' });
+  }
+};
+
 exports.createCliente = async (req, res) => {
   try {
-    const { nombre, apellido, email, telefono, direccion, contraseña, roleId } = req.body;
-
-    // Verificar si el roleId es válido
-    const role = await Role.findByPk(roleId);
-    if (!role) {
-      return res.status(400).json({ error: 'Rol no válido' });
-    }
-
+    const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
     const hashedPassword = await bcrypt.hash(contraseña, 10);
-    const cliente = await Cliente.create({
+    const newCliente = await usuarioService.createUsuario({
       nombre,
       apellido,
       email,
       telefono,
       direccion,
       contraseña: hashedPassword,
-      roleId
+      roleId: '172064d1-394e-4da9-8761-63dcdcc57c10', // Establece el roleId por defecto
     });
-    res.status(201).json(cliente);
+    res.status(201).json(newCliente);
   } catch (error) {
-    res.status(500).json({ message: 'Error al crear cliente', error: error.message });
+    res.status(500).json({ error: 'Error al crear cliente' });
   }
 };
 
-// Obtener un cliente por ID
-exports.getClienteById = async (req, res) => {
-  try {
-    const cliente = await Cliente.findByPk(req.params.id);
-    if (cliente) {
-      res.json(cliente);
-    } else {
-      res.status(404).json({ error: 'Cliente no encontrado' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener cliente' });
-  }
-};
-
-// Actualizar un cliente
 exports.updateCliente = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, email, telefono, direccion, contraseña, roleId } = req.body;
+    const updates = { nombre, apellido, email, telefono, direccion, roleId };
 
-    // Verificar si el roleId es válido
-    if (roleId) {
-      const role = await Role.findByPk(roleId);
-      if (!role) {
-        return res.status(400).json({ error: 'Rol no válido' });
-      }
+    if (contraseña) {
+      updates.contraseña = await bcrypt.hash(contraseña, 10);
     }
 
-    const cliente = await Cliente.findByPk(id);
-    if (cliente) {
-      cliente.nombre = nombre;
-      cliente.apellido = apellido;
-      cliente.email = email;
-      cliente.telefono = telefono;
-      cliente.direccion = direccion;
-      if (contraseña) {
-        cliente.contraseña = await bcrypt.hash(contraseña, 10);
-      }
-      if (roleId) {
-        cliente.roleId = roleId;
-      }
-      await cliente.save();
-      res.json(cliente);
-    } else {
-      res.status(404).json({ message: 'Cliente no encontrado' });
-    }
+    const updatedCliente = await usuarioService.updateUsuario(id, updates);
+    if (!updatedCliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.json(updatedCliente);
   } catch (error) {
-    res.status(500).json({ message: 'Error al actualizar cliente', error: error.message });
+    res.status(500).json({ error: 'Error al actualizar cliente' });
   }
 };
 
-// Eliminar un cliente
 exports.deleteCliente = async (req, res) => {
   try {
-    const deleted = await Cliente.destroy({
-      where: { id: req.params.id }
-    });
-    if (deleted) {
-      res.status(200).json({ message: 'Cliente eliminado exitosamente' });
-    } else {
-      res.status(404).json({ error: 'Cliente no encontrado' });
-    }
+    const { id } = req.params;
+    const result = await usuarioService.deleteUsuario(id);
+    if (!result) return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: 'Error al eliminar cliente' });
   }

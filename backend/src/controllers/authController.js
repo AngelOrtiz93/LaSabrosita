@@ -1,4 +1,4 @@
-const { authenticate, getUserByEmail, generateResetToken, sendResetEmail, resetPassword: resetPasswordService } = require('../services/authService');
+const { authenticateUsuario, getUsuarioByEmail, generateResetToken, sendResetEmail, resetUsuarioPassword } = require('../services/authService');
 const jwt = require('jsonwebtoken');
 
 // Función para el inicio de sesión
@@ -12,11 +12,18 @@ const login = async (req, res) => {
 
   try {
     // Intento de autenticación
-    const { token, userType, roleId, roleName } = await authenticate(email, password);
-    res.json({ token, userType, roleId, roleName });
+    const { token, roleId, roleName } = await authenticateUsuario(email, password);
+
+    // Verificar que el token se ha generado
+    if (!token) {
+      return res.status(401).json({ message: 'Autenticación fallida, token no generado' });
+    }
+
+    // Enviar respuesta con el token, roleId, y roleName
+    res.json({ token, roleId, roleName });
   } catch (error) {
     // Mensaje de error específico
-    if (error.message === 'Invalid credentials') {
+    if (error.message === 'Credenciales incorrectas') {
       return res.status(401).json({ message: 'Email o contraseña incorrectos' });
     }
     res.status(500).json({ message: 'Error en el servidor al intentar iniciar sesión' });
@@ -33,7 +40,7 @@ const forgotPassword = async (req, res) => {
   }
 
   try {
-    const user = await getUserByEmail(email);
+    const user = await getUsuarioByEmail(email);
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
@@ -60,7 +67,7 @@ const resetPasswordHandler = async (req, res) => {
     const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
     const email = decoded.email;
 
-    await resetPasswordService(email, newPassword);
+    await resetUsuarioPassword(email, newPassword);
 
     res.status(200).json({ message: 'Contraseña restablecida con éxito' });
   } catch (error) {
