@@ -57,10 +57,21 @@ const DetallePedido = require('./models/detallePedido');
 const Role = require('./models/Role');
 const Permission = require('./models/permission');
 const RolePermission = require('./models/rolePermission');
+const UserRole = require('./models/UserRole');
 
 // Relación de uno a muchos entre Usuario y Pedido
 Usuario.hasMany(Pedido, { foreignKey: 'usuarioId' });
 Pedido.belongsTo(Usuario, { foreignKey: 'usuarioId' });
+
+// En tu modelo Usuario
+Usuario.belongsToMany(Role, { through: 'UsuarioRoles' });
+
+// En tu modelo Role
+Role.belongsToMany(Usuario, { through: 'UsuarioRoles' });
+
+
+Usuario.belongsToMany(Role, { through: UserRole, foreignKey: 'userId' });
+Role.belongsToMany(Usuario, { through: UserRole, foreignKey: 'roleId' });
 
 Producto.hasMany(DetallePedido, { foreignKey: 'productoId' });
 DetallePedido.belongsTo(Producto, { foreignKey: 'productoId' });
@@ -68,8 +79,6 @@ DetallePedido.belongsTo(Producto, { foreignKey: 'productoId' });
 Pedido.hasMany(DetallePedido, { foreignKey: 'pedidoId' });
 DetallePedido.belongsTo(Pedido, { foreignKey: 'pedidoId' });
 
-Usuario.belongsTo(Role, { foreignKey: 'roleId' }); // Cambiar empleado a usuario
-Role.hasMany(Usuario, { foreignKey: 'roleId' }); // Cambiar empleado a usuario
 
 Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'roleId' });
 Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permissionId' });

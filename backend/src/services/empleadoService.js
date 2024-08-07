@@ -1,12 +1,14 @@
-const Empleado = require('../models/usuario'); // Asegúrate de que el modelo se llame `Empleado` y esté en el lugar correcto
+const Empleado = require('../models/usuario');  // Ajusta la ruta según sea necesario
+const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
 
-// ID del rol de empleado
-const EMPLEADO_ROLE_ID = '75072156-018a-4015-aab4-64801d8b6d03';
-
-const getAllEmpleados = async () => {
+const getAllEmpleados = async (roleIds) => {
   try {
-    // Devuelve solo los empleados con el roleId específico
-    return await Empleado.findAll({ where: { roleId: EMPLEADO_ROLE_ID } });
+    return await Empleado.findAll({
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
   } catch (error) {
     throw new Error('Error al obtener empleados: ' + error.message);
   }
@@ -14,8 +16,15 @@ const getAllEmpleados = async () => {
 
 const getEmpleadoById = async (id) => {
   try {
-    const empleado = await Empleado.findOne({ where: { id, roleId: EMPLEADO_ROLE_ID } });
-    if (!empleado) throw new Error('Empleado no encontrado');
+    const empleado = await Empleado.findByPk(id, {
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
+    if (!empleado) {
+      throw new Error('Empleado no encontrado');
+    }
     return empleado;
   } catch (error) {
     throw new Error('Error al obtener empleado: ' + error.message);
@@ -24,9 +33,12 @@ const getEmpleadoById = async (id) => {
 
 const createEmpleado = async (data) => {
   try {
-    // Asegura que el roleId esté establecido correctamente al crear un empleado
-    data.roleId = EMPLEADO_ROLE_ID;
-    return await Empleado.create(data);
+    // Crear el empleado y asignar roles si se proporcionan
+    const empleado = await Empleado.create(data);
+    if (data.roleId) {
+      await empleado.setRoles(data.roleId); // Asigna los roles al empleado
+    }
+    return empleado;
   } catch (error) {
     console.error('Error al crear empleado:', error);
     throw new Error('Error al crear empleado: ' + error.message);
@@ -35,10 +47,26 @@ const createEmpleado = async (data) => {
 
 const updateEmpleado = async (id, data) => {
   try {
-    // Asegura que solo se actualicen empleados con el roleId específico
-    const [updated] = await Empleado.update(data, { where: { id, roleId: EMPLEADO_ROLE_ID } });
-    if (!updated) throw new Error('Empleado no encontrado');
-    return await Empleado.findOne({ where: { id, roleId: EMPLEADO_ROLE_ID } });
+    // Actualiza los datos del empleado
+    const [updated] = await Empleado.update(data, { where: { id } });
+    if (updated === 0) {
+      throw new Error('Empleado no encontrado');
+    }
+
+    // Vuelve a obtener el empleado actualizado
+    const empleado = await Empleado.findByPk(id);
+
+    // Actualiza las asociaciones de roles
+    if (data.roleId && data.roleId.length > 0) {
+      await empleado.setRoles(data.roleId); // `setRoles` acepta un array de IDs
+    }
+
+    return await Empleado.findByPk(id, {
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
   } catch (error) {
     throw new Error('Error al actualizar empleado: ' + error.message);
   }
@@ -46,9 +74,10 @@ const updateEmpleado = async (id, data) => {
 
 const deleteEmpleado = async (id) => {
   try {
-    // Asegura que solo se eliminen empleados con el roleId específico
-    const deleted = await Empleado.destroy({ where: { id, roleId: EMPLEADO_ROLE_ID } });
-    if (!deleted) throw new Error('Empleado no encontrado');
+    const deleted = await Empleado.destroy({ where: { id } });
+    if (deleted === 0) {
+      throw new Error('Empleado no encontrado');
+    }
     return { message: 'Empleado eliminado exitosamente' };
   } catch (error) {
     throw new Error('Error al eliminar empleado: ' + error.message);

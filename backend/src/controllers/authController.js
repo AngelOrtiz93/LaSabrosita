@@ -1,40 +1,31 @@
 const { authenticateUsuario, getUsuarioByEmail, generateResetToken, sendResetEmail, resetUsuarioPassword } = require('../services/authService');
 const jwt = require('jsonwebtoken');
 
-// Función para el inicio de sesión
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  // Validación básica de entrada
   if (!email || !password) {
     return res.status(400).json({ message: 'Email y contraseña son requeridos' });
   }
 
   try {
-    // Intento de autenticación
-    const { token, roleId, roleName } = await authenticateUsuario(email, password);
+    const { token, roleIds, roleNames } = await authenticateUsuario(email, password);
 
-    // Verificar que el token se ha generado
     if (!token) {
       return res.status(401).json({ message: 'Autenticación fallida, token no generado' });
     }
 
-    // Enviar respuesta con el token, roleId, y roleName
-    res.json({ token, roleId, roleName });
+    res.json({ token, roleIds, roleNames });
   } catch (error) {
-    // Mensaje de error específico
-    if (error.message === 'Credenciales incorrectas') {
-      return res.status(401).json({ message: 'Email o contraseña incorrectos' });
-    }
-    res.status(500).json({ message: 'Error en el servidor al intentar iniciar sesión' });
+    const statusCode = error.message === 'Credenciales incorrectas' ? 401 : 500;
+    const message = error.message === 'Credenciales incorrectas' ? 'Email o contraseña incorrectos' : 'Error en el servidor al intentar iniciar sesión';
+    res.status(statusCode).json({ message });
   }
 };
 
-// Función para solicitar el correo de restablecimiento de contraseña
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
-  // Validación básica de entrada
   if (!email) {
     return res.status(400).json({ message: 'Email es requerido' });
   }
@@ -54,11 +45,9 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Función para restablecer la contraseña
 const resetPasswordHandler = async (req, res) => {
   const { token, newPassword } = req.body;
 
-  // Validación básica de entrada
   if (!token || !newPassword) {
     return res.status(400).json({ message: 'Token y nueva contraseña son requeridos' });
   }
@@ -71,11 +60,9 @@ const resetPasswordHandler = async (req, res) => {
 
     res.status(200).json({ message: 'Contraseña restablecida con éxito' });
   } catch (error) {
-    // Mensaje de error específico para el token
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      return res.status(400).json({ message: 'Token inválido o expirado' });
-    }
-    res.status(500).json({ message: 'Error al restablecer la contraseña' });
+    const statusCode = error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' ? 400 : 500;
+    const message = error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' ? 'Token inválido o expirado' : 'Error al restablecer la contraseña';
+    res.status(statusCode).json({ message });
   }
 };
 

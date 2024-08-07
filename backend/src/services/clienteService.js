@@ -1,13 +1,14 @@
-const Cliente = require('../models/usuario'); // Asegúrate de que el modelo se llame `Cliente` y esté en el lugar correcto
+const Cliente = require('../models/usuario');  // Ajusta la ruta según sea necesario
+const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
 
-const getAllClientes = async (roleId) => {
+const getAllClientes = async (roleIds) => {
   try {
-    // Si no se proporciona roleId, devuelve todos los clientes
-    if (!roleId) {
-      return await Cliente.findAll();
-    }
-    // Devuelve solo los clientes con el roleId especificado
-    return await Cliente.findAll({ where: { roleId } });
+    return await Cliente.findAll({
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
   } catch (error) {
     throw new Error('Error al obtener clientes: ' + error.message);
   }
@@ -15,8 +16,15 @@ const getAllClientes = async (roleId) => {
 
 const getClienteById = async (id) => {
   try {
-    const cliente = await Cliente.findByPk(id);
-    if (!cliente) throw new Error('Cliente no encontrado');
+    const cliente = await Cliente.findByPk(id, {
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
+    if (!cliente) {
+      throw new Error('Cliente no encontrado');
+    }
     return cliente;
   } catch (error) {
     throw new Error('Error al obtener cliente: ' + error.message);
@@ -25,7 +33,12 @@ const getClienteById = async (id) => {
 
 const createCliente = async (data) => {
   try {
-    return await Cliente.create(data);
+    // Crear el cliente y asignar roles si se proporcionan
+    const cliente = await Cliente.create(data);
+    if (data.roleId) {
+      await cliente.setRoles(data.roleId); // Asigna los roles al cliente
+    }
+    return cliente;
   } catch (error) {
     console.error('Error al crear cliente:', error);
     throw new Error('Error al crear cliente: ' + error.message);
@@ -34,9 +47,26 @@ const createCliente = async (data) => {
 
 const updateCliente = async (id, data) => {
   try {
+    // Actualiza los datos del cliente
     const [updated] = await Cliente.update(data, { where: { id } });
-    if (!updated) throw new Error('Cliente no encontrado');
-    return await Cliente.findByPk(id);
+    if (updated === 0) {
+      throw new Error('Cliente no encontrado');
+    }
+
+    // Vuelve a obtener el cliente actualizado
+    const cliente = await Cliente.findByPk(id);
+
+    // Actualiza las asociaciones de roles
+    if (data.roleId && data.roleId.length > 0) {
+      await cliente.setRoles(data.roleId); // `setRoles` acepta un array de IDs
+    }
+
+    return await Cliente.findByPk(id, {
+      include: {
+        model: Role,
+        through: { attributes: [] }
+      }
+    });
   } catch (error) {
     throw new Error('Error al actualizar cliente: ' + error.message);
   }
@@ -45,7 +75,9 @@ const updateCliente = async (id, data) => {
 const deleteCliente = async (id) => {
   try {
     const deleted = await Cliente.destroy({ where: { id } });
-    if (!deleted) throw new Error('Cliente no encontrado');
+    if (deleted === 0) {
+      throw new Error('Cliente no encontrado');
+    }
     return { message: 'Cliente eliminado exitosamente' };
   } catch (error) {
     throw new Error('Error al eliminar cliente: ' + error.message);

@@ -3,27 +3,25 @@ const Permission = require('../models/permission');  // Importa el modelo Permis
 
 const authorize = (requiredPermission) => async (req, res, next) => {
   try {
-    // Obtén el usuario del objeto req, que fue agregado por el middleware de autenticación
     const user = req.user;
 
     if (!user) {
       return res.status(401).json({ message: 'Usuario no autenticado' });
     }
 
-    // Encuentra el rol del usuario, asegurándote de que sea una instancia Sequelize con sus permisos cargados
-    const role = await Role.findByPk(user.roleId, {
+    const roles = user.roles;
+    const roleIds = roles.map(role => role.id);
+
+    const rolesWithPermissions = await Role.findAll({
+      where: { id: roleIds },
       include: {
         model: Permission,
-        through: { attributes: [] }  // Solo trae permisos sin la tabla intermedia
+        through: { attributes: [] }
       }
     });
 
-    if (!role) {
-      return res.status(403).json({ message: 'Rol no encontrado' });
-    }
-
-    // Verifica si el rol tiene el permiso requerido
-    const hasPermission = role.Permissions.some(permission => permission.name === requiredPermission);
+    const permissions = rolesWithPermissions.flatMap(role => role.Permissions.map(permission => permission.name));
+    const hasPermission = permissions.includes(requiredPermission);
 
     if (!hasPermission) {
       return res.status(403).json({ message: 'Permiso denegado' });

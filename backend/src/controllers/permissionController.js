@@ -1,11 +1,10 @@
-// src/controllers/permissionController.js
 const Permission = require('../models/permission');
 
 // Crear un nuevo permiso
 exports.createPermission = async (req, res) => {
   try {
-    const { nombre } = req.body;
-    const newPermission = await Permission.create({ nombre });
+    const { name, description } = req.body; // Extrae 'description' del cuerpo de la solicitud
+    const newPermission = await Permission.create({ name, description });
     res.status(201).json(newPermission);
   } catch (error) {
     res.status(500).json({ error: 'Error al crear permiso' });
@@ -39,10 +38,10 @@ exports.getPermissionById = async (req, res) => {
 // Actualizar un permiso
 exports.updatePermission = async (req, res) => {
   try {
-    const { nombre } = req.body;
+    const { name, description } = req.body; // Extrae 'description' del cuerpo de la solicitud
     const permission = await Permission.findByPk(req.params.id);
     if (!permission) throw new Error('Permiso no encontrado');
-    await permission.update({ nombre });
+    await permission.update({ name, description });
     res.json(permission);
   } catch (error) {
     res.status(500).json({ error: 'Error al actualizar permiso' });
@@ -64,4 +63,3 @@ exports.deletePermission = async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar permiso' });
   }
 };
-    

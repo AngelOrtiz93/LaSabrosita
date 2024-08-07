@@ -10,10 +10,12 @@ module.exports = {
       where: { email: 'admin@example.com' }
     }, ['email']);
 
-    // Si no existe, crear el usuario
+    // Si no existe, crear el usuario y asignar el rol de administrador
     if (!existingUser) {
+      const userId = uuidv4();  // Genera un UUID para el nuevo registro
+
       await queryInterface.bulkInsert('Usuarios', [{
-        id: uuidv4(),  // Genera un UUID para el nuevo registro
+        id: userId,
         nombre: 'Admin',
         apellido: 'Uno',
         email: 'admin@example.com',
@@ -23,11 +25,27 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date()
       }]);
+
+      // Asignar el rol de administrador
+      const adminRoleId = '975cc6db-27b1-48ef-9cd1-8a61401766a2';  // ID del rol de administrador
+      await queryInterface.bulkInsert('UserRoles', [{
+        userId: userId,
+        roleId: adminRoleId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }]);
     }
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Eliminar el usuario en caso de que la migración se revierta
-    await queryInterface.bulkDelete('Usuarios', { email: 'admin@example.com' });
+    // Eliminar el usuario y la asignación de rol en caso de que la migración se revierta
+    const userId = await queryInterface.rawSelect('Usuarios', {
+      where: { email: 'admin@example.com' }
+    }, ['id']);
+
+    if (userId) {
+      await queryInterface.bulkDelete('UserRoles', { userId: userId });
+      await queryInterface.bulkDelete('Usuarios', { id: userId });
+    }
   }
 };
