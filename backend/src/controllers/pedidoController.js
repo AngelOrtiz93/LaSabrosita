@@ -12,7 +12,7 @@ exports.getAllPedidos = async (req, res) => {
     const pedidos = await pedidoService.getAllPedidos();
     res.json(pedidos);
   } catch (error) {
-    handleError(res, error, 'Error fetching pedidos');
+    handleError(res, error, 'Error al obtener pedidos');
   }
 };
 
@@ -21,10 +21,10 @@ exports.getPedidoById = async (req, res) => {
   try {
     const { id } = req.params;
     const pedido = await pedidoService.getPedidoById(id);
-    if (!pedido) return res.status(404).json({ error: 'Pedido not found' });
+    if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
     res.json(pedido);
   } catch (error) {
-    handleError(res, error, 'Error fetching pedido');
+    handleError(res, error, 'Error al obtener pedido');
   }
 };
 
@@ -34,7 +34,7 @@ exports.createPedido = async (req, res) => {
     const newPedido = await pedidoService.createPedido(req.body);
     res.status(201).json(newPedido);
   } catch (error) {
-    handleError(res, error, 'Error creating pedido');
+    handleError(res, error, 'Error al crear pedido');
   }
 };
 
@@ -43,10 +43,10 @@ exports.updatePedido = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedPedido = await pedidoService.updatePedido(id, req.body);
-    if (!updatedPedido) return res.status(404).json({ error: 'Pedido not found' });
+    if (!updatedPedido) return res.status(404).json({ error: 'Pedido no encontrado' });
     res.json(updatedPedido);
   } catch (error) {
-    handleError(res, error, 'Error updating pedido');
+    handleError(res, error, 'Error al actualizar pedido');
   }
 };
 
@@ -55,10 +55,10 @@ exports.deletePedido = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await pedidoService.deletePedido(id);
-    if (!deleted) return res.status(404).json({ error: 'Pedido not found' });
-    res.status(200).json({ message: 'Pedido deleted successfully' });
+    if (!deleted) return res.status(404).json({ error: 'Pedido no encontrado' });
+    res.status(200).json({ message: 'Pedido eliminado exitosamente' });
   } catch (error) {
-    handleError(res, error, 'Error deleting pedido');
+    handleError(res, error, 'Error al eliminar pedido');
   }
 };
 
@@ -69,7 +69,7 @@ exports.getPedidosAsignadosDomiciliario = async (req, res) => {
     const pedidos = await pedidoService.getPedidosAsignados(domiciliarioId);
     res.json(pedidos);
   } catch (error) {
-    handleError(res, error, 'Error fetching assigned orders for domiciliario');
+    handleError(res, error, 'Error al obtener pedidos asignados al domiciliario');
   }
 };
 
@@ -80,7 +80,7 @@ exports.countPedidosCompletados = async (req, res) => {
     const count = await pedidoService.countPedidosCompletados(domiciliarioId);
     res.json({ count });
   } catch (error) {
-    handleError(res, error, 'Error counting completed orders for domiciliario');
+    handleError(res, error, 'Error al contar pedidos completados por domiciliario');
   }
 };
 
@@ -91,7 +91,7 @@ exports.getPedidosAsignadosEmpleado = async (req, res) => {
     const pedidos = await pedidoService.getPedidosAsignadosEmpleado(empleadoId);
     res.json(pedidos);
   } catch (error) {
-    handleError(res, error, 'Error fetching pedidos for empleado');
+    handleError(res, error, 'Error al obtener pedidos asignados al empleado');
   }
 };
 
@@ -102,6 +102,6 @@ exports.countPedidosCompletadosEmpleado = async (req, res) => {
     const count = await pedidoService.countPedidosCompletadosEmpleado(empleadoId);
     res.json({ count });
   } catch (error) {
-    handleError(res, error, 'Error counting completed orders for empleado');
+    handleError(res, error, 'Error al contar pedidos completados por empleado');
   }
 };

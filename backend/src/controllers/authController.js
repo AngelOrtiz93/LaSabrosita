@@ -9,19 +9,26 @@ const login = async (req, res) => {
   }
 
   try {
-    const { token, roleIds, roleNames } = await authenticateUsuario(email, password);
+    const usuario = await authenticateUsuario(email, password);
 
-    if (!token) {
+    if (!usuario.token) {
       return res.status(401).json({ message: 'Autenticación fallida, token no generado' });
     }
 
-    res.json({ token, roleIds, roleNames });
+    // Asegúrate de que roleNames y roleIds están en la respuesta
+    res.json({ 
+      token: usuario.token, 
+      userId: usuario.id, // Incluye userId
+      roleIds: usuario.roleIds, 
+      roleNames: usuario.roleNames 
+    });
   } catch (error) {
     const statusCode = error.message === 'Credenciales incorrectas' ? 401 : 500;
     const message = error.message === 'Credenciales incorrectas' ? 'Email o contraseña incorrectos' : 'Error en el servidor al intentar iniciar sesión';
     res.status(statusCode).json({ message });
   }
 };
+
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;

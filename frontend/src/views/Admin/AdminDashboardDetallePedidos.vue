@@ -76,7 +76,5 @@ const handleCreateDetallePedido = async (detallePedidoData, token) => {
 </script>
 
 <style scoped>
-h1 {
-  margin-bottom: 16px;
-}
+
 </style>

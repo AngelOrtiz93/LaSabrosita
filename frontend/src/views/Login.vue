@@ -24,27 +24,23 @@ const router = useRouter();
 
 const handleLogin = async () => {
   try {
-    const { token, roleNames } = await login(form.value);
+    const response = await login(form.value);
+    const { token, userId, roleIds, roleNames } = response;
+
+    localStorage.setItem('Role', roleNames);  // Cambia aquí
     localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
 
-    message.success('Inicio de sesión exitoso');
-
-    // Prioriza los roles y redirige según el rol más alto
-    if (roleNames.includes('Administrador')) {
-      router.push('/administrador-dashboard');
-    } else if (roleNames.includes('Empleado')) {
-      router.push('/empleado-dashboard');
-    } else if (roleNames.includes('Domiciliario')) {
-      router.push('/domiciliario-dashboard');
-    } else if (roleNames.includes('Cliente')) {
+    if (roleNames.includes('Cliente')) {
       router.push('/cliente-dashboard');
     } else {
-      router.push('/default-dashboard'); // Página por defecto si no hay roles conocidos
+      router.push('/administrador-dashboard');
     }
   } catch (error) {
-    message.error(error.response?.data?.message || 'Error al iniciar sesión');
+    message.error(error.message);
   }
 };
+
 </script>
 
 <style scoped>

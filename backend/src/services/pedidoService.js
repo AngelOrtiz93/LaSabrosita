@@ -1,76 +1,101 @@
 const Pedido = require('../models/pedido');
+const DetallePedido = require('../models/detallePedido');
+const Producto = require('../models/producto');
+const Usuario = require('../models/usuario');
 
-// Obtener todos los pedidos
-const getAllPedidos = async () => {
-  return await Pedido.findAll();
+// Obtener todos los pedidos con detalles y el nombre del usuario
+exports.getAllPedidos = async () => {
+  try {
+    return await Pedido.findAll({
+      include: [
+        {
+          model: Usuario,
+          attributes: ['nombre'] // Incluye el campo nombre del Usuario
+        },
+        {
+          model: DetallePedido,
+          include: [Producto]
+        }
+      ]
+    });
+  } catch (error) {
+    throw new Error('Error al obtener pedidos: ' + error.message);
+  }
 };
 
-// Obtener un pedido por ID
-const getPedidoById = async (id) => {
-  return await Pedido.findByPk(id);
+// Obtener un pedido por ID con detalles y el nombre del usuario
+exports.getPedidoById = async (id) => {
+  try {
+    return await Pedido.findByPk(id, {
+      include: [
+        {
+          model: DetallePedido,
+          include: [Producto]
+        },
+        {
+          model: Usuario,
+          attributes: ['nombre'] // Incluye el campo nombre del Usuario
+        }
+      ]
+    });
+  } catch (error) {
+    throw new Error('Error al obtener pedido: ' + error.message);
+  }
 };
 
 // Crear un nuevo pedido
-const createPedido = async (data) => {
-  return await Pedido.create(data);
+exports.createPedido = async (pedidoData) => {
+  try {
+    const { detalles, usuarioId, ...pedidoInfo } = pedidoData;
+    const newPedido = await Pedido.create({
+      ...pedidoInfo,
+      usuarioId // Incluye el usuarioId si es necesario
+    });
+
+    if (detalles && detalles.length > 0) {
+      await Promise.all(detalles.map(detalle => 
+        DetallePedido.create({
+          ...detalle,
+          pedidoId: newPedido.id
+        })
+      ));
+    }
+
+    return newPedido;
+  } catch (error) {
+    throw new Error('Error al crear pedido: ' + error.message);
+  }
 };
 
 // Actualizar un pedido
-const updatePedido = async (id, data) => {
-  const pedido = await Pedido.findByPk(id);
-  if (!pedido) throw new Error('Pedido not found');
-  return await pedido.update(data);
-};
+exports.updatePedido = async (id, pedidoData) => {
+  try {
+    const { detalles, usuarioId, ...pedidoInfo } = pedidoData;
+    const pedido = await Pedido.findByPk(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
 
-// Eliminar un pedido
-const deletePedido = async (id) => {
-  const pedido = await Pedido.findByPk(id);
-  if (!pedido) throw new Error('Pedido not found');
-  return await pedido.destroy();
-};
+    await pedido.update({
+      ...pedidoInfo,
+      usuarioId // Actualiza el usuarioId si es necesario
+    });
 
-// Obtener pedidos asignados a un domiciliario
-const getPedidosAsignados = async (domiciliarioId) => {
-  return await Pedido.findAll({
-    where: { domiciliarioId }
-  });
-};
+    // Actualizar detalles si es necesario
+    if (detalles) {
+      // Eliminar detalles existentes y agregar los nuevos
+      await DetallePedido.destroy({ where: { pedidoId: pedido.id } });
 
-// Contar pedidos completados por un domiciliario
-const countPedidosCompletados = async (domiciliarioId) => {
-  return await Pedido.count({
-    where: {
-      domiciliarioId,
-      estado: 'Completed'
+      if (detalles.length > 0) {
+        await Promise.all(detalles.map(detalle => 
+          DetallePedido.create({
+            ...detalle,
+            pedidoId: pedido.id
+          })
+        ));
+      }
     }
-  });
-};
 
-// Obtener pedidos asignados a un empleado
-const getPedidosAsignadosEmpleado = async (empleadoId) => {
-  return await Pedido.findAll({
-    where: { empleadoId }
-  });
-};
-
-// Contar pedidos completados por un empleado
-const countPedidosCompletadosEmpleado = async (empleadoId) => {
-  return await Pedido.count({
-    where: {
-      empleadoId,
-      estado: 'Completed'
-    }
-  });
-};
-
-module.exports = {
-  getAllPedidos,
-  getPedidoById,
-  createPedido,
-  updatePedido,
-  deletePedido,
-  getPedidosAsignados,
-  countPedidosCompletados,
-  getPedidosAsignadosEmpleado,
-  countPedidosCompletadosEmpleado
+    return pedido;
+  } catch (error) {
+    throw new Error('Error al actualizar pedido: ' + error.message);
+  }
 };

@@ -4,10 +4,10 @@
       <div class="logo">
         <img src="@/assets/logo.png" alt="Logo" />
       </div>
-      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['2']">
+      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
         <a-menu-item key="1" @click="navigateTo('/cliente-dashboard')">Home</a-menu-item>
         <a-menu-item key="2" @click="navigateTo('/cliente-dashboard/products')">Products</a-menu-item>
-        <a-menu-item key="3" @click="navigateTo('/cliente-dashboard/profile')">Profile</a-menu-item>
+        <a-menu-item key="3" @click="navigateToProfile()">Profile</a-menu-item>
         <a-menu-item key="4" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
@@ -20,16 +20,27 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 const router = useRouter();
 
 const logout = () => {
   localStorage.removeItem('token');
+  localStorage.removeItem('userId');
   router.push('/login');
 };
 
 const navigateTo = (path) => {
   router.push(path);
+};
+
+const navigateToProfile = () => {
+  const userId = localStorage.getItem('userId');
+  if (userId) {
+    router.push(`/cliente-dashboard/profile/${userId}`);
+  } else {
+    console.error('User ID no disponible');
+  }
 };
 </script>
 

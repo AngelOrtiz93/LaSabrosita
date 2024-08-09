@@ -27,7 +27,7 @@ module.exports = {
       }]);
 
       // Asignar el rol de administrador
-      const adminRoleId = '975cc6db-27b1-48ef-9cd1-8a61401766a2';  // ID del rol de administrador
+      const adminRoleId = '9e773bea-a94c-45b5-b1fc-21b6a54b311a';  // ID del rol de administrador
       await queryInterface.bulkInsert('UserRoles', [{
         userId: userId,
         roleId: adminRoleId,

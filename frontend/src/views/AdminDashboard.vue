@@ -4,27 +4,29 @@
       <div class="logo">
         <img src="@/assets/logo.png" alt="Logo" />
       </div>
-      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
-        <a-menu-item key="1" @click="navigateTo('/administrador-dashboard')">Home</a-menu-item>
-        <a-menu-item key="2" @click="navigateTo('/empleado-dashboard/profile')">Profile</a-menu-item>
-        <a-menu-item key="3" @click="logout">Logout</a-menu-item>
+      <a-menu
+        theme="dark"
+        mode="horizontal"
+        :selected-keys="headerSelectedKeys"
+      >
+        <a-menu-item key="1" @click="navigateTo('/administrador-dashboard', '1')">Home</a-menu-item>
+        <a-menu-item key="2" @click="navigateToProfile('2')">Profile</a-menu-item>
+        <a-menu-item key="logout" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
     <a-layout>
-      <!-- El colapso se maneja en el Sider -->
       <a-layout-sider v-model:collapsed="state.collapsed" collapsible>
         <div class="trigger" @click="toggleCollapsed">
           <component :is="state.collapsed ? MenuUnfoldOutlined : MenuFoldOutlined" />
         </div>
         <a-menu
           v-model:openKeys="state.openKeys"
-          v-model:selectedKeys="state.selectedKeys"
+          :selected-keys="siderSelectedKeys"
           mode="inline"
           theme="dark"
         >
-          <!-- La clave se aplica al template que envuelve v-for -->
-          <template v-for="item in items" :key="item.key">
-            <a-menu-item @click="item.onClick">
+          <template v-for="item in filteredItems" :key="item.key">
+            <a-menu-item @click="navigateTo(item.path, item.key, 'sider')">
               <component :is="item.icon" />
               <span>{{ item.label }}</span>
             </a-menu-item>
@@ -40,9 +42,18 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue'; 
 import { useRouter } from 'vue-router';
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons-vue';
+import {
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
+  UserOutlined,
+  ShoppingCartOutlined,
+  AppstoreOutlined,
+  SettingOutlined,
+  SafetyOutlined,
+  SolutionOutlined,
+} from '@ant-design/icons-vue';
 
 export default {
   components: {
@@ -54,80 +65,108 @@ export default {
     const state = ref({
       collapsed: false,
       openKeys: [],
-      selectedKeys: []
     });
+
+    const headerSelectedKeys = ref(['1']);
+    const siderSelectedKeys = ref([]);
+    
+    // Declarar role dentro de setup
+    const role = localStorage.getItem('Role'); 
+
+    const navigateTo = (path, key, menuType = 'header') => {
+      router.push(path);
+      if (menuType === 'header') {
+        headerSelectedKeys.value = [key];
+        siderSelectedKeys.value = [];
+      } else if (menuType === 'sider') {
+        siderSelectedKeys.value = [key];
+        headerSelectedKeys.value = [];
+      }
+    };
+
+    const navigateToProfile = (key) => {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        router.push(`/administrador-dashboard/profile/${userId}`);
+        headerSelectedKeys.value = [key];
+        siderSelectedKeys.value = [];
+      } else {
+        console.error('User ID no disponible');
+      }
+    };
 
     const toggleCollapsed = () => {
       state.value.collapsed = !state.value.collapsed;
     };
 
-    const navigateTo = (path) => {
-      router.push(path);
-    };
-
     const logout = () => {
-      localStorage.removeItem('token'); // Eliminar token
-      router.push('/login'); // Redirigir a la página de inicio de sesión
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      router.push('/login');
+      headerSelectedKeys.value = ['logout'];
+      siderSelectedKeys.value = [];
     };
 
-    // Define los items del menú de acuerdo a tus necesidades
     const items = ref([
       {
         key: '3',
-        label: 'Products',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/products')
+        label: 'Usuarios',
+        icon: UserOutlined,
+        path: '/administrador-dashboard/usuarios',
+        Roles: ['Administrador']
       },
       {
         key: '4',
-        label: 'Clientes',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/clientes')
-      },
-      {
-        key: '5',
-        label: 'Empleados',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/empleados')
+        label: 'Productos',
+        icon: AppstoreOutlined,
+        path: '/administrador-dashboard/productos',
+        Roles: ['Administrador', 'Empleado']
       },
       {
         key: '6',
         label: 'Roles',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/roles')
+        icon: SolutionOutlined,
+        path: '/administrador-dashboard/roles',
+        Roles: ['Administrador']
       },
       {
         key: '7',
         label: 'Permisos',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/permisos')
-      },
-      {
-        key: '8',
-        label: 'Domiciliarios',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/domiciliarios')
+        icon: SafetyOutlined,
+        path: '/administrador-dashboard/permisos',
+        Roles: ['Administrador']
       },
       {
         key: '9',
         label: 'Pedidos',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/pedidos')
+        icon: ShoppingCartOutlined,
+        path: '/administrador-dashboard/pedidos',
+        Roles: ['Administrador', 'Empleado', 'Domiciliario']
       },
       {
         key: '10',
         label: 'Detalles Pedidos',
-        icon: 'MenuUnfoldOutlined',
-        onClick: () => navigateTo('/administrador-dashboard/detalles-pedidos')
+        icon: SettingOutlined,
+        path: '/administrador-dashboard/detalles-pedidos',
+        Roles: ['Administrador', 'Empleado']
       }
     ]);
 
+    // Filtrar ítems según el rol del usuario
+    const filteredItems = computed(() => {
+      return items.value.filter(item => item.Roles.includes(role));
+    });
+
     return {
       state,
+      headerSelectedKeys,
+      siderSelectedKeys,
       toggleCollapsed,
       navigateTo,
+      navigateToProfile,
       logout,
-      items
+      filteredItems,
+      role  // Asegúrate de devolver role
     };
   }
 };
