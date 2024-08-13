@@ -12,9 +12,10 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { message } from 'ant-design-vue';
+import { notification } from 'ant-design-vue';
 import { login } from '@/api/auth';
 import LoginForm from '@/components/auth/LoginForm.vue';
+import { errorMessages } from 'vue/compiler-sfc';
 
 const form = ref({
   email: '',
@@ -26,11 +27,16 @@ const router = useRouter();
 const handleLogin = async () => {
   try {
     const response = await login(form.value);
-    const { token, userId, roleIds, roleNames } = response;
+    const { token } = response;
 
-    localStorage.setItem('Role', roleNames);  // Cambia aquí
-    localStorage.setItem('token', token);
-    localStorage.setItem('userId', userId);
+    // Decodifica el token para obtener la información del usuario
+    const decodedToken = JSON.parse(atob(token.split('.')[1]));
+    const { roleNames = [], roleIds = [], id } = decodedToken;
+
+    // Almacena roleNames y roleIds en localStorage
+    localStorage.setItem('roleNames', JSON.stringify(roleNames)); // Guardamos roleNames como una cadena JSON
+    localStorage.setItem('userId', id);
+    localStorage.setItem('roleIds', JSON.stringify(roleIds)); // Guardamos roleIds como una cadena JSON
 
     if (roleNames.includes('Cliente')) {
       router.push('/cliente-dashboard');
@@ -38,7 +44,14 @@ const handleLogin = async () => {
       router.push('/administrador-dashboard');
     }
   } catch (error) {
-    message.error(error.message);
+    // Muestra una notificación de error si ocurre un problema
+    const errorMessage = error.response?.data?.message || error.message;
+
+    notification.error({
+      message: 'Error de inicio de sesión',
+      description: errorMessage,
+      placement: 'topRight',
+    });
   }
 };
 

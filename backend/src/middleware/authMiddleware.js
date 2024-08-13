@@ -1,25 +1,22 @@
+// Middleware de autenticación
 const jwt = require('jsonwebtoken');
 const Role = require('../models/Role');
-const Usuario = require('../models/usuario'); // Asegúrate de que la ruta sea correcta
+const Usuario = require('../models/usuario');
 
-module.exports = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
 
   if (!authHeader) {
     return res.status(401).json({ message: 'Token no proporcionado' });
   }
 
-  const token = authHeader; // Tomar el token completo sin 'Bearer '
+  const token = authHeader.replace('Bearer ', ''); // Asegúrate de eliminar el prefijo 'Bearer '
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { id } = decoded;
 
-    const usuario = await Usuario.findByPk(id, {
-      include: {
-        model: Role,
-        through: { attributes: [] }  // Si estás usando una tabla de unión
-      }
+    const usuario = await Usuario.findByPk(decoded.id, {
+      include: { model: Role, through: { attributes: [] } }
     });
 
     if (!usuario) {
@@ -33,7 +30,8 @@ module.exports = async (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error('Error al verificar el token:', err);
-    return res.status(403).json({ message: 'Token inválido o expirado', error: err.message });
+    res.status(403).json({ message: 'Token inválido o expirado', error: err.message });
   }
 };
+
+module.exports = authenticate;

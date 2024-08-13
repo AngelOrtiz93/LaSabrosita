@@ -1,5 +1,5 @@
-const Domiciliario = require('../models/usuario');  // Ajusta la ruta según sea necesario
-const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
+const Domiciliario = require('../models/usuario');
+const Role = require('../models/Role');
 
 const getAllDomiciliarios = async () => {
   try {
@@ -35,7 +35,7 @@ const createDomiciliario = async (data) => {
   try {
     const domiciliario = await Domiciliario.create(data);
     if (data.roleId) {
-      await domiciliario.setRoles(data.roleId); // Asigna el rol al domiciliario
+      await domiciliario.setRoles([data.roleId]);
     }
     return domiciliario;
   } catch (error) {
@@ -44,15 +44,12 @@ const createDomiciliario = async (data) => {
   }
 };
 
-
 const updateDomiciliario = async (id, data) => {
   try {
-    // Actualiza los datos del domiciliario
     const [updated] = await Domiciliario.update(data, { where: { id } });
     if (updated === 0) {
       throw new Error('Domiciliario no encontrado');
     }
-
     return await Domiciliario.findByPk(id, {
       include: {
         model: Role,

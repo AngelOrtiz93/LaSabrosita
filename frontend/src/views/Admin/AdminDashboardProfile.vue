@@ -1,10 +1,13 @@
 <template>
   <a-layout class="user-profile-layout">
-    <a-layout-headera>
-      <h1>Perfil del Usuario</h1>
-    </a-layout-headera>
-    <a-layout-content>
-      <a-card title="Detalles del Usuario">
+    <a-layout-header class="user-profile-header">
+      <div class="header-content">
+        <h1>Perfil del Usuario</h1>
+        <a-button @click="goBack" class="back-button">Volver</a-button>
+      </div>
+    </a-layout-header>
+    <a-layout-content class="user-profile-content">
+      <a-card title="Detalles del Usuario" class="user-profile-card">
         <a-form :model="user" layout="vertical">
           <a-form-item label="Nombre">
             <a-input v-model:value="user.nombre" :disabled="!editing" />
@@ -68,62 +71,61 @@ export default {
             Authorization: token,
           }
         });
-        user.value = response.data;
+        user.value = response.data.data;
       } catch (error) {
-        console.error('Error al obtener usuario:', error.response ? error.response.data : error.message);
+        notification.error({
+          message: 'Error al obtener usuario',
+          description: error.response ? error.response.data : error.message,
+        });
       }
     }
 
-    const handleEdit = () => {
+    const handleEdit = async () => {
       if (editing.value) {
-        setTimeout(async () => {
-          try {
-            const token = localStorage.getItem('token');
-            await axios.put(`http://localhost:3001/usuarios/${userId}`, user.value, {
-              headers: {
-                Authorization: token,
-              }
-            });
-            editing.value = false;
-            notification.success({
-              message: 'Éxito',
-              description: 'El perfil se ha actualizado correctamente.',
-            });
-          } catch (error) {
-            notification.error({
-              message: 'Error',
-              description: error.response ? error.response.data : error.message,
-            });
-          }
-        }, 3000);
+        try {
+          const token = localStorage.getItem('token');
+          await axios.put(`http://localhost:3001/usuarios/${userId}`, user.value, {
+            headers: {
+              Authorization: token ,
+            }
+          });
+          editing.value = false;
+          notification.success({
+            message: 'Éxito',
+            description: 'El perfil se ha actualizado correctamente.',
+          });
+        } catch (error) {
+          notification.error({
+            message: 'Error al actualizar',
+            description: error.response ? error.response.data : error.message,
+          });
+        }
       } else {
         editing.value = true;
       }
     };
 
-    const handleDelete = () => {
-      setTimeout(async () => {
-        try {
-          const token = localStorage.getItem('token');
-          await axios.delete(`http://localhost:3001/usuarios/${userId}`, {
-            headers: {
-              Authorization: token,
-            }
-          });
-          localStorage.removeItem('token');
-          localStorage.removeItem('userId');
-          notification.success({
-            message: 'Éxito',
-            description: 'La cuenta se ha eliminado correctamente.',
-          });
-          router.push('/login');
-        } catch (error) {
-          notification.error({
-            message: 'Error',
-            description: error.response ? error.response.data : error.message,
-          });
-        }
-      }, 3000);
+    const handleDelete = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:3001/usuarios/${userId}`, {
+          headers: {
+            Authorization: token ,
+          }
+        });
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        notification.success({
+          message: 'Éxito',
+          description: 'La cuenta se ha eliminado correctamente.',
+        });
+        router.push('/login');
+      } catch (error) {
+        notification.error({
+          message: 'Error al eliminar cuenta',
+          description: error.response ? error.response.data : error.message,
+        });
+      }
     };
 
     const showDeleteConfirm = () => {
@@ -140,9 +142,7 @@ export default {
     };
 
     const goBack = () => {
-      setTimeout(() => {
-        router.back();
-      }, 3000);
+      router.back();
     };
 
     onMounted(() => {
@@ -159,3 +159,47 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.user-profile-layout {
+  min-height: 100vh;
+}
+
+.user-profile-header {
+  background: #fff;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h1 {
+  margin: 0;
+}
+
+.back-button {
+  margin: 0;
+}
+
+.user-profile-content {
+  padding: 24px;
+}
+
+.user-profile-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.delete-button {
+  color: #fff;
+  background-color: #f5222d;
+  border-color: #f5222d;
+}
+</style>

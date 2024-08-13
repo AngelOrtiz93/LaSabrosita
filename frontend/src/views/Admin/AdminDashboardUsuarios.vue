@@ -50,32 +50,44 @@
     </a-modal>
 
     <a-modal
-      v-model:open="isDetailsModalVisible"
-      title="Detalles del Usuario"
-      @cancel="resetDetailsModal"
-      :footer="null"
-    >
-      <a-form :form="detailsForm" layout="vertical">
-        <a-form-item label="ID">
-          <a-input v-model:value="detailsForm.id" disabled />
-        </a-form-item>
-        <a-form-item label="Nombre">
-          <a-input v-model:value="detailsForm.nombre" disabled />
-        </a-form-item>
-        <a-form-item label="Apellido">
-          <a-input v-model:value="detailsForm.apellido" disabled />
-        </a-form-item>
-        <a-form-item label="Email">
-          <a-input v-model:value="detailsForm.email" disabled />
-        </a-form-item>
-        <a-form-item label="Teléfono">
-          <a-input v-model:value="detailsForm.telefono" disabled />
-        </a-form-item>
-        <a-form-item label="Dirección">
-          <a-input v-model:value="detailsForm.direccion" disabled />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+        v-model:open="isDetailsModalVisible"
+        title="Detalles del Usuario"
+        @cancel="resetDetailsModal"
+        :footer="null"
+      >
+        <a-form :form="detailsForm" layout="vertical">
+          <a-form-item label="ID">
+            <a-input v-model:value="detailsForm.id" disabled />
+          </a-form-item>
+          <a-form-item label="Nombre">
+            <a-input v-model:value="detailsForm.nombre" disabled />
+          </a-form-item>
+          <a-form-item label="Apellido">
+            <a-input v-model:value="detailsForm.apellido" disabled />
+          </a-form-item>
+          <a-form-item label="Email">
+            <a-input v-model:value="detailsForm.email" disabled />
+          </a-form-item>
+          <a-form-item label="Teléfono">
+            <a-input v-model:value="detailsForm.telefono" disabled />
+          </a-form-item>
+          <a-form-item label="Dirección">
+            <a-input v-model:value="detailsForm.direccion" disabled />
+          </a-form-item>
+          <a-form-item label="Roles">
+            <a-list
+              :data-source="detailsForm.roles"
+              bordered
+              size="small"
+            >
+        <a-list-item v-for="role in detailsForm.roles" :key="role.id">
+          {{ role.name }} - {{ role.description }}
+        </a-list-item>
+      </a-list>
+    </a-form-item>
+  </a-form>
+</a-modal>
+
 
     <a-modal
       v-model:visible="isDeleteModalVisible"
@@ -143,7 +155,7 @@ export default {
         const response = await axios.get('http://localhost:3001/usuarios', {
           headers: { Authorization: token },
         });
-        usuarios.value = response.data;
+        usuarios.value = response.data.data;
       } catch (error) {
         console.error('Error al obtener usuarios:', error);
       }
@@ -206,9 +218,16 @@ export default {
     };
 
     const viewDetails = (usuario) => {
-      Object.assign(detailsForm, usuario);
+      detailsForm.id = usuario.id;
+      detailsForm.nombre = usuario.nombre;
+      detailsForm.apellido = usuario.apellido;
+      detailsForm.email = usuario.email;
+      detailsForm.telefono = usuario.telefono;
+      detailsForm.direccion = usuario.direccion;
+      detailsForm.roles = usuario.Roles || []; // Asegúrate de que roles esté presente
       isDetailsModalVisible.value = true;
     };
+
 
     const resetForm = () => {
       Object.assign(form, {

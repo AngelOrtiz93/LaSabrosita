@@ -71,8 +71,8 @@ export default {
     const siderSelectedKeys = ref([]);
     
     // Declarar role dentro de setup
-    const role = localStorage.getItem('Role'); 
-
+    const roleNames = JSON.parse(localStorage.getItem('roleNames')) || []; // Asegúrate de que sea un array
+    
     const navigateTo = (path, key, menuType = 'header') => {
       router.push(path);
       if (menuType === 'header') {
@@ -102,6 +102,7 @@ export default {
     const logout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
+      localStorage.removeItem('roleNames'); // Asegúrate de limpiar también roleNames
       router.push('/login');
       headerSelectedKeys.value = ['logout'];
       siderSelectedKeys.value = [];
@@ -154,7 +155,7 @@ export default {
 
     // Filtrar ítems según el rol del usuario
     const filteredItems = computed(() => {
-      return items.value.filter(item => item.Roles.includes(role));
+      return items.value.filter(item => item.Roles.some(role => roleNames.includes(role)));
     });
 
     return {
@@ -166,7 +167,7 @@ export default {
       navigateToProfile,
       logout,
       filteredItems,
-      role  // Asegúrate de devolver role
+      roleNames  // Asegúrate de devolver roleNames
     };
   }
 };

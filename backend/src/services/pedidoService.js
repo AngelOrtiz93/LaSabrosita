@@ -1,3 +1,5 @@
+// src/services/pedidoService.js
+
 const Pedido = require('../models/pedido');
 const DetallePedido = require('../models/detallePedido');
 const Producto = require('../models/producto');
@@ -43,7 +45,6 @@ exports.getPedidoById = async (id) => {
   }
 };
 
-
 // Crear un nuevo pedido
 exports.createPedido = async (pedidoData) => {
   try {
@@ -80,7 +81,6 @@ exports.updatePedido = async (id, pedidoData) => {
       usuarioId // Actualiza el usuarioId si es necesario
     });
 
-    // Actualizar detalles si es necesario
     if (detalles) {
       // Eliminar detalles existentes y agregar los nuevos
       await DetallePedido.destroy({ where: { pedidoId: pedido.id } });
@@ -98,5 +98,59 @@ exports.updatePedido = async (id, pedidoData) => {
     return pedido;
   } catch (error) {
     throw new Error('Error al actualizar pedido: ' + error.message);
+  }
+};
+
+// Eliminar un pedido
+exports.deletePedido = async (id) => {
+  try {
+    const pedido = await Pedido.findByPk(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
+
+    // Eliminar detalles del pedido
+    await DetallePedido.destroy({ where: { pedidoId: id } });
+
+    // Eliminar pedido
+    await pedido.destroy();
+
+    return true;
+  } catch (error) {
+    throw new Error('Error al eliminar pedido: ' + error.message);
+  }
+};
+
+// Obtener pedidos asignados a un domiciliario
+exports.getPedidosAsignados = async (domiciliarioId) => {
+  try {
+    return await Pedido.findAll({ where: { domiciliarioId } });
+  } catch (error) {
+    throw new Error('Error al obtener pedidos asignados al domiciliario: ' + error.message);
+  }
+};
+
+// Contar pedidos completados por un domiciliario
+exports.countPedidosCompletados = async (domiciliarioId) => {
+  try {
+    return await Pedido.count({ where: { domiciliarioId, estado: 'Completado' } });
+  } catch (error) {
+    throw new Error('Error al contar pedidos completados por domiciliario: ' + error.message);
+  }
+};
+
+// Obtener pedidos asignados a un empleado
+exports.getPedidosAsignadosEmpleado = async (empleadoId) => {
+  try {
+    return await Pedido.findAll({ where: { empleadoId } });
+  } catch (error) {
+    throw new Error('Error al obtener pedidos asignados al empleado: ' + error.message);
+  }
+};
+
+// Contar pedidos completados por un empleado
+exports.countPedidosCompletadosEmpleado = async (empleadoId) => {
+  try {
+    return await Pedido.count({ where: { empleadoId, estado: 'Completado' } });
+  } catch (error) {
+    throw new Error('Error al contar pedidos completados por empleado: ' + error.message);
   }
 };

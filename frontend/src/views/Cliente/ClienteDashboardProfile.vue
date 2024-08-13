@@ -1,10 +1,13 @@
 <template>
   <a-layout class="user-profile-layout">
-    <a-layout-headera>
-      <h1>Perfil del Cliente</h1>
-    </a-layout-headera>
-    <a-layout-content>
-      <a-card title="Detalles del Cliente">
+    <a-layout-header class="user-profile-header">
+      <div class="header-content">
+        <h1>Perfil del Usuario</h1>
+        <a-button @click="goBack" class="back-button">Volver</a-button>
+      </div>
+    </a-layout-header>
+    <a-layout-content class="user-profile-content">
+      <a-card title="Detalles del Usuario" class="user-profile-card">
         <a-form :model="user" layout="vertical">
           <a-form-item label="Nombre">
             <a-input v-model:value="user.nombre" :disabled="!editing" />
@@ -31,100 +34,130 @@
   </a-layout>
 </template>
 
-<script setup>
+<script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import { Modal, notification } from 'ant-design-vue';
+import { Button, Layout, Card, Form, Input, Modal, notification } from 'ant-design-vue';
 
-const user = ref({});
-const editing = ref(false);
-const route = useRoute();
-const router = useRouter();
-const userId = route.params.id;
+export default {
+  components: {
+    'a-layout': Layout,
+    'a-layout-header': Layout.Header,
+    'a-layout-content': Layout.Content,
+    'a-button': Button,
+    'a-card': Card,
+    'a-form': Form,
+    'a-form-item': Form.Item,
+    'a-input': Input,
+    'a-modal': Modal,
+  },
+  setup() {
+    const user = ref({});
+    const editing = ref(false);
+    const route = useRoute();
+    const router = useRouter();
+    const userId = route.params.id;
 
-const fetchUser = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`http://localhost:3001/clientes/${userId}`, {
-      headers: {
-        Authorization: token,
+    async function fetchUser() {
+      try {
+        if (!userId) {
+          throw new Error('User ID no disponible');
+        }
+
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:3001/clientes/${userId}`, {
+          headers: {
+            Authorization: token,
+          }
+        });
+        user.value = response.data.data;
+      } catch (error) {
+        notification.error({
+          message: 'Error al obtener usuario',
+          description: error.response ? error.response.data : error.message,
+        });
       }
-    });
-    user.value = response.data;
-  } catch (error) {
-    console.error('Error al obtener cliente:', error.response ? error.response.data : error.message);
-  }
-};
+    }
 
-const handleEdit = async () => {
-  if (editing.value) {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3001/clientes/${userId}`, user.value, {
-        headers: {
-          Authorization: token,
+    const handleEdit = async () => {
+      if (editing.value) {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.put(`http://localhost:3001/clientes/${userId}`, user.value, {
+            headers: {
+              Authorization: token ,
+            }
+          });
+          editing.value = false;
+          notification.success({
+            message: 'Éxito',
+            description: 'El perfil se ha actualizado correctamente.',
+          });
+        } catch (error) {
+          notification.error({
+            message: 'Error al actualizar',
+            description: error.response ? error.response.data : error.message,
+          });
+        }
+      } else {
+        editing.value = true;
+      }
+    };
+
+    const handleDelete = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`http://localhost:3001/clientes/${userId}`, {
+          headers: {
+            Authorization: token ,
+          }
+        });
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        notification.success({
+          message: 'Éxito',
+          description: 'La cuenta se ha eliminado correctamente.',
+        });
+        router.push('/login');
+      } catch (error) {
+        notification.error({
+          message: 'Error al eliminar cuenta',
+          description: error.response ? error.response.data : error.message,
+        });
+      }
+    };
+
+    const showDeleteConfirm = () => {
+      Modal.confirm({
+        title: '¿Estás seguro de que deseas eliminar tu cuenta?',
+        content: 'Esta acción no se puede deshacer.',
+        okText: 'Sí, eliminar',
+        okType: 'danger',
+        cancelText: 'Cancelar',
+        onOk() {
+          handleDelete();
         }
       });
-      editing.value = false;
-      notification.success({
-        message: 'Éxito',
-        description: 'El perfil se ha actualizado correctamente.',
-        duration: 3, // Tiempo en segundos
-      });
-    } catch (error) {
-      notification.error({
-        message: 'Error',
-        description: error.response ? error.response.data : error.message,
-        duration: 3, // Tiempo en segundos
-      });
-    }
-  } else {
-    editing.value = true;
-  }
-};
+    };
 
-const handleDelete = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:3001/clientes/${userId}`, {
-      headers: {
-        Authorization: token,
-      }
-    });
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    notification.success({
-      message: 'Éxito',
-      description: 'La cuenta se ha eliminado correctamente.',
-      duration: 3, // Tiempo en segundos
-    });
-    router.push('/login');
-  } catch (error) {
-    notification.error({
-      message: 'Error',
-      description: error.response ? error.response.data : error.message,
-      duration: 3, // Tiempo en segundos
-    });
-  }
-};
+    const goBack = () => {
+      router.back();
+    };
 
-const showDeleteConfirm = () => {
-  Modal.confirm({
-    title: '¿Estás seguro de que deseas eliminar tu cuenta?',
-    content: 'Esta acción no se puede deshacer.',
-    okText: 'Sí, eliminar',
-    okType: 'danger',
-    cancelText: 'Cancelar',
-    onOk() {
-      handleDelete();
-    }
-  });
-};
+    onMounted(() => {
+      fetchUser();
+    });
 
-onMounted(() => {
-  fetchUser();
-});
+    return {
+      user,
+      editing,
+      goBack,
+      handleEdit,
+      showDeleteConfirm,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -132,38 +165,41 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-a-layout-header {
-  background-color: #001529;
-  color: #fff;
-  padding: 20px;
-  text-align: center;
-}
-
-a-layout-content {
+.user-profile-header {
+  background: #fff;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 50px;
 }
 
-a-card {
-  width: 100%;
+.header-content h1 {
+  margin: 0;
+}
+
+.back-button {
+  margin: 0;
+}
+
+.user-profile-content {
+  padding: 24px;
+}
+
+.user-profile-card {
   max-width: 600px;
-}
-
-a-form-item {
-  margin-bottom: 16px;
+  margin: 0 auto;
 }
 
 .actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 .delete-button {
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
   color: #fff;
+  background-color: #f5222d;
+  border-color: #f5222d;
 }
 </style>

@@ -11,6 +11,9 @@
           <a-button type="link" @click="showEditModal(record)">
             <EditOutlined />
           </a-button>
+          <a-button type="link" @click="viewDetails(record)">
+            <EyeOutlined />
+          </a-button>
           <a-button type="link" danger @click="confirmDelete(record.id)">
             <DeleteOutlined />
           </a-button>
@@ -27,6 +30,7 @@
       </a-table>
     </a-layout-content>
 
+    <!-- Modal para Crear/Editar Producto -->
     <a-modal
       v-model:open="isModalVisible"
       :title="isEditing ? 'Editar Producto' : 'Crear Producto'"
@@ -52,6 +56,7 @@
       </a-form>
     </a-modal>
 
+    <!-- Modal para Confirmar Eliminación -->
     <a-modal
       v-model:visible="isDeleteModalVisible"
       title="Confirmar Eliminación"
@@ -61,6 +66,7 @@
       <p>¿Estás seguro de que deseas eliminar este producto?</p>
     </a-modal>
 
+    <!-- Modal para Ver Imagen -->
     <a-modal
       v-model:open="isImageModalVisible"
       title="Imagen del Producto"
@@ -69,29 +75,69 @@
     >
       <img :src="selectedImageUrl" style="width: 100%; height: auto;" />
     </a-modal>
+
+    <!-- Modal para Ver Detalles del Producto -->
+    <a-modal
+      v-model:open="isDetailsModalVisible"
+      title="Detalles del Producto"
+      @cancel="resetDetailsModal"
+      :footer="null"
+    >
+      <a-form :form="detailsForm" layout="vertical">
+        <a-form-item label="ID">
+          <a-input v-model:value="detailsForm.id" disabled />
+        </a-form-item>
+        <a-form-item label="Nombre">
+          <a-input v-model:value="detailsForm.nombre" disabled />
+        </a-form-item>
+        <a-form-item label="Descripción">
+          <a-input v-model:value="detailsForm.descripcion" disabled />
+        </a-form-item>
+        <a-form-item label="Precio">
+          <a-input v-model:value="detailsForm.precio" disabled />
+        </a-form-item>
+        <a-form-item label="Stock">
+          <a-input v-model:value="detailsForm.stock" disabled />
+        </a-form-item>
+        <a-form-item label="Imagen URL">
+          <a-input v-model:value="detailsForm.imagenUrl" disabled />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </a-layout>
 </template>
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
+import { notification } from 'ant-design-vue';
 
 export default {
   components: {
     PlusOutlined,
     EditOutlined,
     DeleteOutlined,
+    EyeOutlined,
   },
   setup() {
     const productos = ref([]);
     const isModalVisible = ref(false);
     const isDeleteModalVisible = ref(false);
-    const isImageModalVisible = ref(false); 
-    const selectedImageUrl = ref(''); 
+    const isImageModalVisible = ref(false);
+    const isDetailsModalVisible = ref(false);
+    const selectedImageUrl = ref('');
     const isEditing = ref(false);
     const form = reactive({
       id: null,
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      stock: 0,
+      imagenUrl: '',
+    });
+    const detailsForm = reactive({
+      id: '',
       nombre: '',
       descripcion: '',
       precio: 0,
@@ -125,7 +171,10 @@ export default {
         });
         productos.value = response.data;
       } catch (error) {
-        console.error('Error al obtener productos:', error);
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo obtener la lista de productos.',
+        });
       }
     };
 
@@ -152,10 +201,17 @@ export default {
         await axios.post('http://localhost:3001/productos', form, {
           headers: { Authorization: token },
         });
+        notification.success({
+          message: 'Éxito',
+          description: 'Producto creado exitosamente.',
+        });
         fetchProductos();
         resetModal();
       } catch (error) {
-        console.error('Error al crear producto:', error);
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo crear el producto.',
+        });
       }
     };
 
@@ -165,10 +221,17 @@ export default {
         await axios.put(`http://localhost:3001/productos/${form.id}`, form, {
           headers: { Authorization: token },
         });
+        notification.success({
+          message: 'Éxito',
+          description: 'Producto actualizado exitosamente.',
+        });
         fetchProductos();
         resetModal();
       } catch (error) {
-        console.error('Error al actualizar producto:', error);
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo actualizar el producto.',
+        });
       }
     };
 
@@ -183,21 +246,33 @@ export default {
         await axios.delete(`http://localhost:3001/productos/${form.id}`, {
           headers: { Authorization: token },
         });
+        notification.success({
+          message: 'Éxito',
+          description: 'Producto eliminado exitosamente.',
+        });
         fetchProductos();
         resetDeleteModal();
       } catch (error) {
-        console.error('Error al eliminar producto:', error);
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo eliminar el producto.',
+        });
       }
     };
 
-    const showImageModal = (url) => {
-      selectedImageUrl.value = url;
+    const showImageModal = (imageUrl) => {
+      selectedImageUrl.value = imageUrl;
       isImageModalVisible.value = true;
     };
 
-    const resetImageModal = () => {
-      selectedImageUrl.value = '';
-      isImageModalVisible.value = false;
+    const viewDetails = (producto) => {
+      detailsForm.id = producto.id;
+      detailsForm.nombre = producto.nombre;
+      detailsForm.descripcion = producto.descripcion;
+      detailsForm.precio = producto.precio;
+      detailsForm.stock = producto.stock;
+      detailsForm.imagenUrl = producto.imagenUrl;
+      isDetailsModalVisible.value = true;
     };
 
     const resetForm = () => {
@@ -210,13 +285,20 @@ export default {
     };
 
     const resetModal = () => {
-      resetForm();
       isModalVisible.value = false;
+      resetForm();
     };
 
     const resetDeleteModal = () => {
-      form.id = null;
       isDeleteModalVisible.value = false;
+    };
+
+    const resetImageModal = () => {
+      isImageModalVisible.value = false;
+    };
+
+    const resetDetailsModal = () => {
+      isDetailsModalVisible.value = false;
     };
 
     onMounted(() => {
@@ -225,28 +307,35 @@ export default {
 
     return {
       productos,
+      columns,
       isModalVisible,
       isDeleteModalVisible,
       isImageModalVisible,
+      isDetailsModalVisible,
       selectedImageUrl,
       isEditing,
       form,
-      columns,
+      detailsForm,
+      fetchProductos,
       showCreateModal,
       showEditModal,
       createProducto,
       updateProducto,
       confirmDelete,
       deleteProducto,
+      showImageModal,
+      viewDetails,
       resetModal,
       resetDeleteModal,
-      showImageModal,
       resetImageModal,
+      resetDetailsModal,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Añade estilos específicos si es necesario */
+.admin-dashboard-layout {
+  min-height: 100vh;
+}
 </style>

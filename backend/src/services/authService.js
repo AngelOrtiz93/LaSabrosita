@@ -1,112 +1,92 @@
-  const jwt = require('jsonwebtoken');
-  const bcrypt = require('bcrypt');
-  const Usuario = require('../models/usuario');
-  const Role = require('../models/Role');
-  const nodemailer = require('nodemailer');
-  require('dotenv').config();
+// Servicios de autenticación
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const Usuario = require('../models/usuario');
+const Role = require('../models/Role');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS
-    }
-  });
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: process.env.MAIL_PORT,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
+  }
+});
 
-  // Función para generar un token JWT con información del rol
-  const generateToken = (id, roleIds, roleNames) => {
-    return jwt.sign({ id, roleIds, roleNames }, process.env.JWT_SECRET, { expiresIn: '1h' });
-  };
+const generateToken = (id, roleIds, roleNames) => {
+  return jwt.sign({ id, roleIds, roleNames }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
 
-  const authenticateUsuario = async (email, password) => {
-    try {
-      const usuario = await Usuario.findOne({ 
-        where: { email },
-        include: [Role]
-      });
+const authenticateUsuario = async (email, password) => {
+  const usuario = await Usuario.findOne({ where: { email }, include: [Role] });
+
+  if (!usuario || !(await bcrypt.compare(password, usuario.contraseña))) {
+    throw new Error('Credenciales incorrectas');
+  }
+
+  const roles = usuario.Roles;
+  const token = generateToken(usuario.id, roles.map(role => role.id), roles.map(role => role.name));
+
+  return { token };
+};
+
+
+const getUsuarioByEmail = async (email) => {
+  return await Usuario.findOne({ where: { email } });
+};
+
+const generateResetToken = (email) => {
+  return jwt.sign({ email }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
+};
+
+const sendResetEmail = async (email, resetToken) => {
+  const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
   
-      if (!usuario || !(await bcrypt.compare(password, usuario.contraseña))) {
-        throw new Error('Credenciales incorrectas');
-      }
-  
-      const roles = usuario.Roles;
-      const roleIds = roles.map(role => role.id);
-      const roleNames = roles.map(role => role.name);
-  
-      const token = generateToken(usuario.id, roleIds, roleNames);
-      return { token, id: usuario.id, roleIds, roleNames }; // Devuelve id
-    } catch (error) {
-      throw new Error(`Error en la autenticación: ${error.message}`);
-    }
-  };
-  
-
-  const getUsuarioByEmail = async (email) => {
-    try {
-      return await Usuario.findOne({ where: { email } });
-    } catch (error) {
-      throw new Error(`Error al obtener el usuario: ${error.message}`);
-    }
-  };
-
-  const generateResetToken = (email) => {
-    return jwt.sign({ email }, process.env.RESET_TOKEN_SECRET, { expiresIn: '1h' });
-  };
-
-  const sendResetEmail = async (email, resetToken) => {
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-    
-    const mailOptions = {
-      to: email,
-      subject: 'Restablecimiento de Contraseña',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-        <h1 style="color: #FFD700;">La Sabrosita</h1>
-          <h2 style="color: #333;">Restablecimiento de Contraseña</h2>
-          <p style="font-size: 16px; color: #555;">
-            Para restablecer tu contraseña, haz clic en el siguiente enlace:
-          </p>
-          <p>
-            <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; font-size: 16px; color: #fff; background-color: #007bff; border-radius: 5px; text-decoration: none;">Restablecer Contraseña</a>
-          </p>
-          <p style="font-size: 14px; color: #888;">
-            Si no solicitaste el restablecimiento de la contraseña, ignora este correo electrónico.
-          </p>
-          <p style="font-size: 12px; color: #aaa;">
-            Este es un correo automático, por favor no respondas.
-          </p>
+  const mailOptions = {
+    to: email,
+    subject: 'Restablecimiento de Contraseña',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #f9f9f9;">
+        <h1 style="color: #FFD700; text-align: center;">La Sabrosita</h1>
+        <h2 style="color: #333; text-align: center;">Restablecimiento de Contraseña</h2>
+        <p style="font-size: 16px; color: #555; line-height: 1.5; text-align: center;">
+          Hola, <br> Hemos recibido una solicitud para restablecer tu contraseña. Si realizaste esta solicitud, haz clic en el botón de abajo para restablecer tu contraseña:
+        </p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #fff; background-color: #007bff; border-radius: 5px; text-decoration: none;">Restablecer Contraseña</a>
         </div>
-      `
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (error) {
-      throw new Error(`Error al enviar el correo de restablecimiento: ${error.message}`);
-    }
+        <p style="font-size: 14px; color: #888; text-align: center;">
+          Si no solicitaste el restablecimiento de la contraseña, puedes ignorar este correo de forma segura.
+        </p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #aaa; text-align: center;">
+          Este es un correo automático, por favor no respondas. Si necesitas ayuda, contacta con nuestro soporte.
+        </p>
+      </div>
+    `
   };
 
-  const resetUsuarioPassword = async (email, newPassword) => {
-    try {
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      const usuario = await Usuario.findOne({ where: { email } });
+  await transporter.sendMail(mailOptions);
+};
 
-      if (usuario) {
-        await Usuario.update({ contraseña: hashedPassword }, { where: { email } });
-        return { message: 'Contraseña restablecida exitosamente' };
-      }
 
-      throw new Error('Usuario no encontrado');
-    } catch (error) {
-      throw new Error(`Error al restablecer la contraseña: ${error.message}`);
-    }
-  };
+const resetUsuarioPassword = async (email, newPassword) => {
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const usuario = await Usuario.findOne({ where: { email } });
 
-  module.exports = {
-    authenticateUsuario,
-    getUsuarioByEmail,
-    generateResetToken,
-    sendResetEmail,
-    resetUsuarioPassword
-  };
+  if (!usuario) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  await Usuario.update({ contraseña: hashedPassword }, { where: { email } });
+};
+
+module.exports = {
+  authenticateUsuario,
+  getUsuarioByEmail,
+  generateResetToken,
+  sendResetEmail,
+  resetUsuarioPassword
+};

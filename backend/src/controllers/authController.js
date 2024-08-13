@@ -11,17 +11,12 @@ const login = async (req, res) => {
   try {
     const usuario = await authenticateUsuario(email, password);
 
-    if (!usuario.token) {
+    if (!usuario || !usuario.token) {
       return res.status(401).json({ message: 'Autenticación fallida, token no generado' });
     }
 
-    // Asegúrate de que roleNames y roleIds están en la respuesta
-    res.json({ 
-      token: usuario.token, 
-      userId: usuario.id, // Incluye userId
-      roleIds: usuario.roleIds, 
-      roleNames: usuario.roleNames 
-    });
+    // Solo devolver el token
+    res.json({ token: usuario.token });
   } catch (error) {
     const statusCode = error.message === 'Credenciales incorrectas' ? 401 : 500;
     const message = error.message === 'Credenciales incorrectas' ? 'Email o contraseña incorrectos' : 'Error en el servidor al intentar iniciar sesión';
@@ -29,7 +24,7 @@ const login = async (req, res) => {
   }
 };
 
-
+// Controlador de recuperación de contraseña
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -52,6 +47,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// Controlador de restablecimiento de contraseña
 const resetPasswordHandler = async (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -61,9 +57,7 @@ const resetPasswordHandler = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
-    const email = decoded.email;
-
-    await resetUsuarioPassword(email, newPassword);
+    await resetUsuarioPassword(decoded.email, newPassword);
 
     res.status(200).json({ message: 'Contraseña restablecida con éxito' });
   } catch (error) {
@@ -73,8 +67,17 @@ const resetPasswordHandler = async (req, res) => {
   }
 };
 
+// Controlador de cierre de sesión
+const logout = (req, res) => {
+  // Si usas JWT, el logout normalmente se maneja en el cliente eliminando el token.
+  // Aquí puedes implementar lógica adicional si usas lista negra de tokens u otros métodos.
+
+  res.status(200).json({ message: 'Logout exitoso' });
+};
+
 module.exports = {
   login,
   forgotPassword,
-  resetPassword: resetPasswordHandler
+  resetPassword: resetPasswordHandler,
+  logout
 };

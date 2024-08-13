@@ -43,17 +43,17 @@ app.use(express.json());
 
 // Configurar rutas
 app.use('/auth', authRoutes);
-app.use('/usuarios', authMiddleware, usuarioRoutes);
+app.use('/usuarios', usuarioRoutes);
 app.use('/clientes', clienteRoutes);
-app.use('/domiciliarios', authMiddleware, domiciliariosRoutes);
-app.use('/empleados', authMiddleware, empleadoRoutes);
-app.use('/pedidos', authMiddleware, pedidoRoutes);
-app.use('/productos', authMiddleware, productoRoutes);
-app.use('/detalle-pedidos', authMiddleware, detallePedidoRoutes);
-app.use('/roles', authMiddleware, roleRoutes);
-app.use('/permissions', authMiddleware, permissionRoutes);
-app.use('/role-permissions', authMiddleware, rolePermissionRoutes);
-app.use('/user-roles', authMiddleware, userRoleRoutes); // Agregar ruta para asignar roles
+app.use('/domiciliarios', domiciliariosRoutes);
+app.use('/empleados', empleadoRoutes);
+app.use('/pedidos', pedidoRoutes);
+app.use('/productos', productoRoutes);
+app.use('/detalle-pedidos', detallePedidoRoutes);
+app.use('/roles', roleRoutes);
+app.use('/permissions', permissionRoutes);
+app.use('/role-permissions', rolePermissionRoutes);
+app.use('/user-roles', userRoleRoutes); 
 
 // Definir relaciones entre modelos
 const Usuario = require('./models/usuario');

@@ -20,8 +20,9 @@ export const login = async (form) => {
     return { token, userId, roleIds, roleNames };
   } catch (error) {
     // Manejo de errores
-    console.error('Error en login:', error.response?.data?.message || error.message);
-    throw error;
+    const errorMessage = error.response?.data?.message || error.message || 'Error en la solicitud de inicio de sesión';
+    console.error('Error en login:', errorMessage);
+    throw new Error(errorMessage);
   }
 };
 

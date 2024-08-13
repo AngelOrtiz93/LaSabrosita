@@ -4,9 +4,9 @@ const bcrypt = require('bcrypt');
 // Obtener todos los empleados
 exports.getAllEmpleados = async (req, res) => {
   try {
-    const roleId = req.user.roles.map(role => role.id); // Obtén todos los roles del usuario autenticado
-    const empleados = await empleadoService.getAllEmpleados(roleId); // Pasa los roles al servicio
-    res.json(empleados);
+    const roleIds = req.user.roles.map(role => role.id); 
+    const empleados = await empleadoService.getAllEmpleados(roleIds); 
+    res.status(200).json({ message: 'Empleados obtenidos exitosamente', data: empleados });
   } catch (error) {
     console.error('Error al obtener empleados:', error);
     res.status(500).json({ error: 'Error al obtener empleados' });
@@ -21,7 +21,7 @@ exports.getEmpleadoById = async (req, res) => {
     if (!empleado) {
       return res.status(404).json({ error: 'Empleado no encontrado' });
     }
-    res.json(empleado);
+    res.status(200).json({ message: 'Empleado obtenido exitosamente', data: empleado });
   } catch (error) {
     console.error('Error al obtener empleado:', error);
     res.status(500).json({ error: 'Error al obtener empleado' });
@@ -34,8 +34,7 @@ exports.createEmpleado = async (req, res) => {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
     const hashedPassword = await bcrypt.hash(contraseña, 10);
 
-    // Aquí se define el roleId como 'Empleado' por defecto
-    const empleadoRoleId = '93188656-0203-43b6-bda0-429c420e7f0e'; // Reemplaza con el UUID del rol "Empleado"
+    const empleadoRoleId = '93188656-0203-43b6-bda0-429c420e7f0e'; 
 
     const newEmpleado = await empleadoService.createEmpleado({
       nombre,
@@ -47,7 +46,7 @@ exports.createEmpleado = async (req, res) => {
       roleId: empleadoRoleId,
     });
 
-    res.status(201).json(newEmpleado);
+    res.status(201).json({ message: 'Empleado creado exitosamente', data: newEmpleado });
   } catch (error) {
     console.error('Error al crear empleado:', error);
     res.status(500).json({ error: 'Error al crear empleado' });
@@ -69,7 +68,7 @@ exports.updateEmpleado = async (req, res) => {
     if (!updatedEmpleado) {
       return res.status(404).json({ error: 'Empleado no encontrado' });
     }
-    res.json(updatedEmpleado);
+    res.status(200).json({ message: 'Empleado actualizado exitosamente', data: updatedEmpleado });
   } catch (error) {
     console.error('Error al actualizar empleado:', error);
     res.status(500).json({ error: 'Error al actualizar empleado' });
@@ -84,7 +83,7 @@ exports.deleteEmpleado = async (req, res) => {
     if (!result) {
       return res.status(404).json({ error: 'Empleado no encontrado' });
     }
-    res.status(200).json(result);
+    res.status(200).json({ message: 'Empleado eliminado exitosamente' });
   } catch (error) {
     console.error('Error al eliminar empleado:', error);
     res.status(500).json({ error: 'Error al eliminar empleado' });

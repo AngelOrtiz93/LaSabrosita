@@ -1,5 +1,5 @@
-const Empleado = require('../models/usuario');  // Ajusta la ruta según sea necesario
-const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
+const Empleado = require('../models/usuario');  
+const Role = require('../models/Role');  
 
 const getAllEmpleados = async (roleIds) => {
   try {

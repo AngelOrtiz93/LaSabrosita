@@ -1,5 +1,5 @@
-const Usuario = require('../models/usuario');  // Ajusta la ruta según sea necesario
-const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
+const Usuario = require('../models/usuario');
+const Role = require('../models/Role');
 
 const getAllUsuarios = async (roleIds) => {
   try {
@@ -33,10 +33,9 @@ const getUsuarioById = async (id) => {
 
 const createUsuario = async (data) => {
   try {
-    // Crear el usuario y asignar roles si se proporcionan
     const usuario = await Usuario.create(data);
     if (data.roleId) {
-      await usuario.setRoles(data.roleId); // Asigna los roles al usuario
+      await usuario.setRoles(data.roleId);
     }
     return usuario;
   } catch (error) {
@@ -47,18 +46,15 @@ const createUsuario = async (data) => {
 
 const updateUsuario = async (id, data) => {
   try {
-    // Actualiza los datos del usuario
     const [updated] = await Usuario.update(data, { where: { id } });
     if (updated === 0) {
       throw new Error('Usuario no encontrado');
     }
 
-    // Vuelve a obtener el usuario actualizado
     const usuario = await Usuario.findByPk(id);
 
-    // Actualiza las asociaciones de roles
     if (data.roleId && data.roleId.length > 0) {
-      await usuario.setRoles(data.roleId); // `setRoles` acepta un array de IDs
+      await usuario.setRoles(data.roleId);
     }
 
     return await Usuario.findByPk(id, {

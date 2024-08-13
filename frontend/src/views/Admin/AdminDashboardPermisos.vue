@@ -12,7 +12,7 @@
             <EditOutlined />
           </a-button>
           <a-button type="link" @click="viewDetails(record)">
-            Ver Detalles
+            <EyeOutlined />
           </a-button>
           <a-button type="link" danger @click="confirmDelete(record.id)">
             <DeleteOutlined />
@@ -63,7 +63,7 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
 
 export default {
@@ -71,6 +71,7 @@ export default {
     PlusOutlined,
     EditOutlined,
     DeleteOutlined,
+    EyeOutlined
   },
   setup() {
     const permissions = ref([]);
