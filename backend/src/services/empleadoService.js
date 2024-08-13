@@ -33,10 +33,9 @@ const getEmpleadoById = async (id) => {
 
 const createEmpleado = async (data) => {
   try {
-    // Crear el empleado y asignar roles si se proporcionan
     const empleado = await Empleado.create(data);
     if (data.roleId) {
-      await empleado.setRoles(data.roleId); // Asigna los roles al empleado
+      await empleado.setRoles(data.roleId); // Asigna el rol al empleado
     }
     return empleado;
   } catch (error) {
@@ -47,18 +46,14 @@ const createEmpleado = async (data) => {
 
 const updateEmpleado = async (id, data) => {
   try {
-    // Actualiza los datos del empleado
     const [updated] = await Empleado.update(data, { where: { id } });
     if (updated === 0) {
       throw new Error('Empleado no encontrado');
     }
 
-    // Vuelve a obtener el empleado actualizado
     const empleado = await Empleado.findByPk(id);
-
-    // Actualiza las asociaciones de roles
-    if (data.roleId && data.roleId.length > 0) {
-      await empleado.setRoles(data.roleId); // `setRoles` acepta un array de IDs
+    if (data.roleId) {
+      await empleado.setRoles(data.roleId);
     }
 
     return await Empleado.findByPk(id, {

@@ -1,10 +1,5 @@
 <template>
   <a-layout class="admin-dashboard-layout">
-    <a-layout-headera>
-      <a-button type="primary" @click="showCreateModal">
-        <PlusOutlined /> Crear Pedido
-      </a-button>
-    </a-layout-headera>
     <a-layout-content>
       <a-table :columns="columns" :data-source="pedidos" rowKey="id">
         <template v-slot:actions="{ record }">
@@ -27,50 +22,53 @@
       title="Detalles del Pedido"
       @ok="resetDetailsModal"
       @cancel="resetDetailsModal"
-      width="80%"
+      width="70%"
     >
       <div v-if="selectedPedido">
         <p><strong>ID:</strong> {{ selectedPedido.id }}</p>
-        <p><strong>Cliente ID:</strong> {{ selectedPedido.clienteId }}</p>
+        <p><strong>Cliente ID:</strong> {{ selectedPedido.usuarioId }}</p>
         <p><strong>Fecha del Pedido:</strong> {{ selectedPedido.fechaPedido }}</p>
         <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p>
-        <p><strong>Usuario:</strong> {{ selectedPedido.Usuario.nombre }}</p>
+        <p><strong>Usuario:</strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.nombre : 'No disponible' }}</p>
         <a-table :columns="detailColumns" :data-source="selectedPedido.DetallePedidos" rowKey="id" />
       </div>
     </a-modal>
 
-    <!-- Modal para crear o editar pedido -->
-    <a-modal
-      v-model:open="isModalVisible"
-      :title="isEditing ? 'Editar Pedido' : 'Crear Pedido'"
-      @ok="isEditing ? updatePedido() : createPedido()"
-      @cancel="resetModal"
-    >
-      <a-form :form="form">
-        <a-form-item label="Cliente ID">
-          <a-input v-model:value="form.clienteId" />
-        </a-form-item>
-        <a-form-item label="Fecha del Pedido">
-          <a-date-picker v-model:value="form.fechaPedido" />
-        </a-form-item>
-        <a-form-item label="Productos">
-          <a-textarea v-model:value="form.productos" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+   <!-- Modal para editar pedido -->
+<a-modal
+  v-model:open="isModalVisible"
+  title="Editar Pedido"
+  @ok="updatePedido"
+  @cancel="resetModal"
+>
+  <a-form :form="form">
+    <a-form-item label="Cliente ID">
+      <a-input v-model:value="form.clienteId" />
+    </a-form-item>
+    <a-form-item label="Empleado ID">
+      <a-input v-model:value="form.empleadoId" />
+    </a-form-item>
+    <a-form-item label="Domiciliario ID">
+      <a-input v-model:value="form.domiciliarioId" />
+    </a-form-item>
+    <a-form-item label="Fecha del Pedido">
+      <a-date-picker v-model:value="form.fechaPedido" format="YYYY-MM-DD HH:mm:ss" />
+    </a-form-item>
+  </a-form>
+</a-modal>
+
 
     <!-- Modal para confirmar eliminación -->
     <a-modal
       v-model:open="isDeleteModalVisible"
       title="Confirmar Eliminación"
-      @ok="deletePedido()"
+      @ok="deletePedido"
       @cancel="resetDeleteModal"
     >
       <p>¿Estás seguro de que deseas eliminar este pedido?</p>
     </a-modal>
   </a-layout>
 </template>
-
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
@@ -93,7 +91,7 @@ export default {
     const selectedPedido = ref(null);
     const form = reactive({
       id: null,
-      clienteId: '',
+      usuarioId: '',
       fechaPedido: null,
       productos: '',
     });
@@ -115,11 +113,6 @@ export default {
       { title: 'Producto ID', dataIndex: 'productoId' },
       { title: 'Cantidad', dataIndex: 'cantidad' },
       { title: 'Precio Unitario', dataIndex: 'precioUnitario' },
-      {
-        title: 'Producto',
-        dataIndex: 'Producto',
-        render: (text) => text.nombre,
-      },
     ];
 
     const fetchPedidos = async () => {
@@ -128,26 +121,23 @@ export default {
         const response = await axios.get('http://localhost:3001/pedidos', {
           headers: { Authorization: token },
         });
+        console.log('Datos de pedidos:', response.data); // Verifica la estructura
         pedidos.value = response.data;
       } catch (error) {
         console.error('Error al obtener pedidos:', error);
       }
     };
 
-    const showCreateModal = () => {
-      resetForm();
-      isEditing.value = false;
-      isModalVisible.value = true;
-    };
-
     const showEditModal = (pedido) => {
-      form.id = pedido.id;
-      form.clienteId = pedido.clienteId;
-      form.fechaPedido = pedido.fechaPedido;
-      form.productos = pedido.productos;
-      isEditing.value = true;
-      isModalVisible.value = true;
-    };
+  form.id = pedido.id;
+  form.clienteId = pedido.clienteId; // Ajustado para coincidir con el backend
+  form.empleadoId = pedido.empleadoId; // Ajustado para coincidir con el backend
+  form.domiciliarioId = pedido.domiciliarioId; // Ajustado para coincidir con el backend
+  form.fechaPedido = pedido.fechaPedido;
+  isModalVisible.value = true;
+};
+
+
 
     const showDetailsModal = async (pedido) => {
       try {
@@ -155,38 +145,36 @@ export default {
         const response = await axios.get(`http://localhost:3001/pedidos/${pedido.id}`, {
           headers: { Authorization: token },
         });
+        console.log('Datos del pedido:', response.data); // Verifica la estructura de los datos
         selectedPedido.value = response.data;
         isDetailsModalVisible.value = true;
       } catch (error) {
         console.error('Error al obtener detalles del pedido:', error);
       }
     };
-
-    const createPedido = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post('http://localhost:3001/pedidos', form, {
-          headers: { Authorization: token },
-        });
-        fetchPedidos();
-        resetModal();
-      } catch (error) {
-        console.error('Error al crear pedido:', error);
-      }
-    };
-
+   
     const updatePedido = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/pedidos/${form.id}`, form, {
-          headers: { Authorization: token },
-        });
-        fetchPedidos();
-        resetModal();
-      } catch (error) {
-        console.error('Error al actualizar pedido:', error);
-      }
+  try {
+    const token = localStorage.getItem('token');
+    const payload = {
+      clienteId: form.clienteId,
+      empleadoId: form.empleadoId,
+      domiciliarioId: form.domiciliarioId,
+      fechaPedido: form.fechaPedido,
     };
+    await axios.put(`http://localhost:3001/pedidos/${form.id}`, payload, {
+      headers: { Authorization: token },
+    });
+    fetchPedidos();
+    resetModal();
+  } catch (error) {
+    console.error('Error al actualizar pedido:', error);
+  }
+};
+
+
+
+
 
     const confirmDelete = (id) => {
       form.id = id;
@@ -208,7 +196,7 @@ export default {
 
     const resetForm = () => {
       form.id = null;
-      form.clienteId = '';
+      form.usuarioId = '';
       form.fechaPedido = null;
       form.productos = '';
     };
@@ -242,10 +230,8 @@ export default {
       form,
       columns,
       detailColumns,
-      showCreateModal,
       showEditModal,
       showDetailsModal,
-      createPedido,
       updatePedido,
       confirmDelete,
       deletePedido,

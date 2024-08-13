@@ -5,6 +5,7 @@
         <LoginForm :form="form" @submit="handleLogin" />
       </a-card>
     </a-layout-content>
+    <a-layout-footer class="footer">Restaurante La Sabrosita ©2024</a-layout-footer>
   </a-layout>
 </template>
 

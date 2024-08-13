@@ -207,4 +207,5 @@ export default {
   padding: 16px;
   cursor: pointer;
 }
+
 </style>

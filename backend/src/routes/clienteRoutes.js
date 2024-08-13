@@ -7,7 +7,7 @@ const authorize = require('../middleware/authorize');
 // Rutas para clientes
 router.get('/', authMiddleware, authorize('Obtener Todos los Clientes'), clienteController.getAllClientes);
 router.get('/:id', authMiddleware, authorize('Obtener Cliente por ID'), clienteController.getClienteById);
-router.post('/', authMiddleware, authorize('Crear Cliente'), clienteController.createCliente);
+router.post('/', clienteController.createCliente);
 router.put('/:id', authMiddleware, authorize('Actualizar Cliente'), clienteController.updateCliente);
 router.delete('/:id', authMiddleware, authorize('Eliminar Cliente'), clienteController.deleteCliente);
 

@@ -1,7 +1,7 @@
 const Domiciliario = require('../models/usuario');  // Ajusta la ruta según sea necesario
 const Role = require('../models/Role');  // Ajusta la ruta según sea necesario
 
-const getAllDomiciliarios = async (roleIds) => {
+const getAllDomiciliarios = async () => {
   try {
     return await Domiciliario.findAll({
       include: {
@@ -33,10 +33,9 @@ const getDomiciliarioById = async (id) => {
 
 const createDomiciliario = async (data) => {
   try {
-    // Crear el domiciliario y asignar roles si se proporcionan
     const domiciliario = await Domiciliario.create(data);
     if (data.roleId) {
-      await domiciliario.setRoles(data.roleId); // Asigna los roles al domiciliario
+      await domiciliario.setRoles(data.roleId); // Asigna el rol al domiciliario
     }
     return domiciliario;
   } catch (error) {
@@ -45,20 +44,13 @@ const createDomiciliario = async (data) => {
   }
 };
 
+
 const updateDomiciliario = async (id, data) => {
   try {
     // Actualiza los datos del domiciliario
     const [updated] = await Domiciliario.update(data, { where: { id } });
     if (updated === 0) {
       throw new Error('Domiciliario no encontrado');
-    }
-
-    // Vuelve a obtener el domiciliario actualizado
-    const domiciliario = await Domiciliario.findByPk(id);
-
-    // Actualiza las asociaciones de roles
-    if (data.roleId && data.roleId.length > 0) {
-      await domiciliario.setRoles(data.roleId); // `setRoles` acepta un array de IDs
     }
 
     return await Domiciliario.findByPk(id, {

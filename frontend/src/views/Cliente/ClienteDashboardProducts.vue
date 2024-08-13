@@ -8,6 +8,13 @@
     >
       Carrito ({{ cartItems.length }})
     </a-button>
+    <a-button
+  type="default"
+  @click="isOrdersModalVisible = true"
+  class="view-orders-button"
+>
+  Ver Pedidos Realizados
+</a-button>
 
     <h2>Nuestros Productos</h2>
     <a-row :gutter="16">
@@ -72,28 +79,149 @@
         </a-button>
       </div>
     </a-modal>
+
+    <!-- Modal para mostrar los pedidos realizados -->
+    <a-modal
+      v-model:visible="isOrdersModalVisible"
+      title="Mis Pedidos"
+      width="800px"
+      :footer="null"
+    >
+      <div class="search-container">
+        <a-input
+          v-model="searchOrderId"
+          placeholder="Buscar pedido por ID"
+          @change="fetchOrderById"
+          style="margin-bottom: 20px;"
+        />
+      </div>
+
+      <template v-if="filteredOrders.length > 0">
+        <a-list
+          item-layout="vertical"
+          :data-source="filteredOrders"
+          bordered
+        >
+          <a-list-item
+            v-for="order in filteredOrders"
+            :key="order.id"
+          >
+            <a-list-item-meta
+              :title="'Pedido #' + order.id"
+              :description="'Fecha: ' + new Date(order.fechaPedido).toLocaleDateString()"
+            />
+            <a-list-item-content>
+              <ul>
+                <li v-for="detail in order.detalles" :key="detail.id">
+                  Producto: {{ detail.producto.nombre }} - Cantidad: {{ detail.cantidad }} - Precio: $ {{ detail.precioUnitario }}
+                </li>
+              </ul>
+              <p>Estado: {{ order.estado }}</p>
+            </a-list-item-content>
+          </a-list-item>
+        </a-list>
+      </template>
+      <template v-else>
+        <p>No se encontraron pedidos.</p>
+      </template>
+      <div class="modal-footer">
+        <a-button @click="isOrdersModalVisible = false" class="cancel-button">
+          Cerrar
+        </a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { getProducts } from '@/api/producto';
+import axios from 'axios';
+import { notification } from 'ant-design-vue';
+
+const API_URL_PEDIDOS = 'http://localhost:3001/pedidos'; // Ajusta la URL según tu configuración
+const API_URL_PRODUCTOS = 'http://localhost:3001/productos'; // Ajusta la URL según tu configuración
 
 const products = ref([]);
 const cartItems = ref([]);
 const isModalVisible = ref(false);
+const isOrdersModalVisible = ref(false);
+const orders = ref([]);
+const searchOrderId = ref('');
+const filteredOrders = computed(() => {
+  return orders.value.filter(order => order.id.toString().includes(searchOrderId.value));
+});
+
+// Función para obtener el ID del usuario desde el local storage
+const getUserId = () => {
+  return localStorage.getItem('userId');
+};
 
 const token = localStorage.getItem('token');
 
+// Funciones de API
+const getProducts = async () => {
+  try {
+    const response = await axios.get(API_URL_PRODUCTOS, {
+      headers: { Authorization: token } // Aquí está el token sin 'Bearer'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los productos:', error);
+    throw error;
+  }
+};
+
+const createPedido = async (pedidoData) => {
+  try {
+    const response = await axios.post(API_URL_PEDIDOS, pedidoData, {
+      headers: { Authorization: token } // Aquí también el token sin 'Bearer'
+    });
+
+    // Mostrar notificación de éxito
+    notification.success({
+      message: 'Éxito',
+      description: `Pedido creado. Tu ID de pedido es ${response.data.id}. Estado: ${response.data.estado}.`,
+      duration: 5
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear el pedido:', error);
+    
+    // Mostrar notificación de error
+    notification.error({
+      message: 'Error',
+      description: 'Hubo un problema al crear el pedido. Inténtalo nuevamente.',
+      duration: 4
+    });
+
+    throw error;
+  }
+};
+
+const getPedidos = async () => {
+  try {
+    const response = await axios.get(API_URL_PEDIDOS, {
+      headers: { Authorization: token } // Incluye el token sin 'Bearer'
+    });
+    return response.data.filter(pedido => pedido.usuarioId === getUserId()); // Filtra por el usuarioId
+  } catch (error) {
+    console.error('Error al obtener los pedidos:', error);
+    throw error;
+  }
+};
+
+// Lifecycle hook
 onMounted(async () => {
   try {
-    const response = await getProducts(token);
-    products.value = response.data;
+    const response = await getProducts();
+    products.value = response;
   } catch (error) {
     console.error('Error al cargar los productos:', error);
   }
 });
 
+// Methods
 const addToCart = (product) => {
   const existingItem = cartItems.value.find(
     (item) => item.product.id === product.id
@@ -121,14 +249,36 @@ const totalPrice = computed(() => {
   );
 });
 
-const checkout = () => {
+const checkout = async () => {
   if (cartItems.value.length > 0) {
-    alert('Pago procesado. ¡Gracias por tu compra!');
-    cartItems.value = [];
-    isModalVisible.value = false;
+    try {
+      await createPedido({
+        detalles: cartItems.value.map(item => ({
+          productoId: item.product.id,
+          cantidad: item.quantity,
+          precioUnitario: item.product.precio
+        })),
+        usuarioId: getUserId() // Asegúrate de usar el ID correcto del usuario
+      });
+      cartItems.value = [];
+      isModalVisible.value = false;
+    } catch (error) {
+      console.error('Error al crear el pedido:', error);
+    }
+  }
+};
+
+const fetchOrderById = async () => {
+  try {
+    const allOrders = await getPedidos();
+    orders.value = allOrders.filter(order => order.id.toString().includes(searchOrderId.value));
+  } catch (error) {
+    console.error('Error al buscar el pedido:', error);
   }
 };
 </script>
+
+
 
 <style scoped>
 h2 {
@@ -147,7 +297,7 @@ h2 {
   position: fixed;
   bottom: 16px;
   right: 16px;
-  z-index: 1000; /* Asegura que el botón esté encima de otros elementos */
+  z-index: 1000;
 }
 
 .cart-item-list {
@@ -216,5 +366,9 @@ h2 {
 
 .cancel-button:hover {
   background-color: #bfbfbf;
+}
+
+.view-orders-button {
+  margin-top: 20px;
 }
 </style>

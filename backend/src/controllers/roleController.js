@@ -1,13 +1,10 @@
 const roleService = require('../services/roleService');
-const Role = require('../models/Role');
-const Permission = require('../models/permission'); // Asegúrate de que el nombre de archivo y la importación sean correctos
-const RolePermission = require('../models/rolePermission');
 
 // Crear un nuevo rol
 exports.createRole = async (req, res) => {
   try {
-    const { nombre, permisos } = req.body;
-    const newRole = await roleService.createRole({ name: nombre, permissions: permisos });
+    const { nombre, descripcion, permisos } = req.body;
+    const newRole = await roleService.createRole({ name: nombre, description: descripcion, permissions: permisos });
     res.status(201).json(newRole);
   } catch (error) {
     console.error('Error al crear rol:', error);
@@ -45,8 +42,8 @@ exports.getRoleById = async (req, res) => {
 exports.updateRole = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, permisos } = req.body;
-    const updatedRole = await roleService.updateRole(id, { name: nombre, permissions: permisos });
+    const { nombre, descripcion, permisos } = req.body;
+    const updatedRole = await roleService.updateRole(id, { name: nombre, description: descripcion, permissions: permisos });
     if (!updatedRole) {
       return res.status(404).json({ error: 'Rol no encontrado' });
     }
@@ -56,7 +53,6 @@ exports.updateRole = async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar rol', details: error.message });
   }
 };
-
 
 // Eliminar un rol
 exports.deleteRole = async (req, res) => {

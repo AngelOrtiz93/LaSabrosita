@@ -5,6 +5,7 @@
         <ForgotPasswordForm :form="form" @submit="handleForgotPassword" />
       </a-card>
     </a-layout-content>
+    <a-layout-footer class="footer">Restaurante La Sabrosita ©2024</a-layout-footer>
   </a-layout>
 </template>
 

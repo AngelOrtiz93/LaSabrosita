@@ -54,22 +54,32 @@ exports.updateUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
+    
+    // Crear un objeto con los campos a actualizar
     const updates = { nombre, apellido, email, telefono, direccion };
 
+    // Solo incluir la contraseña en los updates si se proporciona
     if (contraseña) {
+      // Hash de la contraseña antes de actualizar
       updates.contraseña = await bcrypt.hash(contraseña, 10);
     }
 
+    // Actualizar el usuario en la base de datos
     const updatedUsuario = await usuarioService.updateUsuario(id, updates);
+
+    // Verificar si el usuario fue encontrado y actualizado
     if (!updatedUsuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+
+    // Enviar la respuesta con el usuario actualizado
     res.json(updatedUsuario);
   } catch (error) {
     console.error('Error al actualizar usuario:', error);
     res.status(500).json({ error: 'Error al actualizar usuario' });
   }
 };
+
 
 // Eliminar un usuario
 exports.deleteUsuario = async (req, res) => {

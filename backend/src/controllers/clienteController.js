@@ -30,6 +30,10 @@ exports.createCliente = async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
     const hashedPassword = await bcrypt.hash(contraseña, 10);
+
+    // Aquí se define el roleId como 'Cliente' por defecto
+    const clienteRoleId = '05b1d9d5-d727-4c99-b404-16b8fcffd684';  // Reemplaza con el UUID del rol "Cliente"
+
     const newCliente = await clienteService.createCliente({
       nombre,
       apellido,
@@ -37,14 +41,16 @@ exports.createCliente = async (req, res) => {
       telefono,
       direccion,
       contraseña: hashedPassword,
-      roleId: req.user.roles.length > 0 ? req.user.roles[0].id : null, // Usa el roleId del usuario autenticado si es necesario
+      roleId: clienteRoleId,
     });
+
     res.status(201).json(newCliente);
   } catch (error) {
     console.error('Error al crear cliente:', error);
     res.status(500).json({ error: 'Error al crear cliente' });
   }
 };
+
 
 exports.updateCliente = async (req, res) => {
   try {

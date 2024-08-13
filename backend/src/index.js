@@ -44,7 +44,7 @@ app.use(express.json());
 // Configurar rutas
 app.use('/auth', authRoutes);
 app.use('/usuarios', authMiddleware, usuarioRoutes);
-app.use('/clientes', authMiddleware, clienteRoutes);
+app.use('/clientes', clienteRoutes);
 app.use('/domiciliarios', authMiddleware, domiciliariosRoutes);
 app.use('/empleados', authMiddleware, empleadoRoutes);
 app.use('/pedidos', authMiddleware, pedidoRoutes);

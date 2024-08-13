@@ -1,6 +1,7 @@
 const empleadoService = require('../services/empleadoService');
 const bcrypt = require('bcrypt');
 
+// Obtener todos los empleados
 exports.getAllEmpleados = async (req, res) => {
   try {
     const roleId = req.user.roles.map(role => role.id); // Obtén todos los roles del usuario autenticado
@@ -12,6 +13,7 @@ exports.getAllEmpleados = async (req, res) => {
   }
 };
 
+// Obtener empleado por ID
 exports.getEmpleadoById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -26,10 +28,15 @@ exports.getEmpleadoById = async (req, res) => {
   }
 };
 
+// Crear un nuevo empleado
 exports.createEmpleado = async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
     const hashedPassword = await bcrypt.hash(contraseña, 10);
+
+    // Aquí se define el roleId como 'Empleado' por defecto
+    const empleadoRoleId = '93188656-0203-43b6-bda0-429c420e7f0e'; // Reemplaza con el UUID del rol "Empleado"
+
     const newEmpleado = await empleadoService.createEmpleado({
       nombre,
       apellido,
@@ -37,8 +44,9 @@ exports.createEmpleado = async (req, res) => {
       telefono,
       direccion,
       contraseña: hashedPassword,
-      roleId: req.user.roles.length > 0 ? req.user.roles[0].id : null, // Usa el roleId del usuario autenticado si es necesario
+      roleId: empleadoRoleId,
     });
+
     res.status(201).json(newEmpleado);
   } catch (error) {
     console.error('Error al crear empleado:', error);
@@ -46,6 +54,7 @@ exports.createEmpleado = async (req, res) => {
   }
 };
 
+// Actualizar un empleado existente
 exports.updateEmpleado = async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,6 +76,7 @@ exports.updateEmpleado = async (req, res) => {
   }
 };
 
+// Eliminar un empleado
 exports.deleteEmpleado = async (req, res) => {
   try {
     const { id } = req.params;

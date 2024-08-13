@@ -30,6 +30,10 @@ exports.createDomiciliario = async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
     const hashedPassword = await bcrypt.hash(contraseña, 10);
+
+    // ID del rol "domiciliario" por defecto
+    const domiciliarioRoleId = 'afa02f31-7bca-46e1-a7eb-ea7573462d61'; // Reemplaza con el UUID del rol "domiciliario"
+
     const newDomiciliario = await domiciliarioService.createDomiciliario({
       nombre,
       apellido,
@@ -37,14 +41,16 @@ exports.createDomiciliario = async (req, res) => {
       telefono,
       direccion,
       contraseña: hashedPassword,
-      roleId: req.user.roles.length > 0 ? req.user.roles[0].id : null, // Usa el roleId del usuario autenticado si es necesario
+      roleId: domiciliarioRoleId,
     });
+
     res.status(201).json(newDomiciliario);
   } catch (error) {
     console.error('Error al crear domiciliario:', error);
     res.status(500).json({ error: 'Error al crear domiciliario' });
   }
 };
+
 
 exports.updateDomiciliario = async (req, res) => {
   try {

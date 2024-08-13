@@ -33,17 +33,21 @@ const getClienteById = async (id) => {
 
 const createCliente = async (data) => {
   try {
-    // Crear el cliente y asignar roles si se proporcionan
+    // Crear el cliente y asignar roles
     const cliente = await Cliente.create(data);
+    
+    // Asigna el rol 'Cliente' automáticamente
     if (data.roleId) {
-      await cliente.setRoles(data.roleId); // Asigna los roles al cliente
+      await cliente.setRoles([data.roleId]); // Asigna los roles al cliente
     }
+
     return cliente;
   } catch (error) {
     console.error('Error al crear cliente:', error);
     throw new Error('Error al crear cliente: ' + error.message);
   }
 };
+
 
 const updateCliente = async (id, data) => {
   try {

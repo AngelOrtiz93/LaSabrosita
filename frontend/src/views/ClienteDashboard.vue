@@ -14,7 +14,7 @@
     <a-layout-content class="content">
       <router-view></router-view>
     </a-layout-content>
-    <a-layout-footer class="footer">Fast Food Restaurant ©2024</a-layout-footer>
+    <a-layout-footer class="footer">Restaurante La Sabrosita ©2024</a-layout-footer>
   </a-layout>
 </template>
 

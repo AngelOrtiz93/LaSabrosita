@@ -62,6 +62,7 @@
       subject: 'Restablecimiento de Contraseña',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h1 style="color: #FFD700;">La Sabrosita</h1>
           <h2 style="color: #333;">Restablecimiento de Contraseña</h2>
           <p style="font-size: 16px; color: #555;">
             Para restablecer tu contraseña, haz clic en el siguiente enlace:
