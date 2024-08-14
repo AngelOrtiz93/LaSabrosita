@@ -1,12 +1,22 @@
 <template>
   <a-layout class="admin-dashboard-layout">
     <a-layout-headera>
-      <a-button type="primary" @click="showCreateModal">
-        <PlusOutlined /> Crear Usuario
-      </a-button>
-    </a-layout-headera>
+  <a-button type="primary" @click="showCreateModal" style="margin-right: 16px;">
+    <PlusOutlined /> Crear Usuario
+  </a-button>
+  <a-input
+    placeholder="Buscar por nombre"
+    style="width: 300px; margin: 16px 0;"
+    @input="handleSearch"
+  >
+    <template #prefix>
+      <SearchOutlined />
+    </template>
+  </a-input>
+</a-layout-headera>
+
     <a-layout-content>
-      <a-table :columns="columns" :data-source="usuarios" rowKey="id">
+      <a-table :columns="columns" :data-source="filteredUsuarios" rowKey="id">
         <template v-slot:actions="{ record }">
           <a-button type="link" @click="showEditModal(record)">
             <EditOutlined />
@@ -21,89 +31,37 @@
       </a-table>
     </a-layout-content>
 
-    <a-modal
-      v-model:open="isModalVisible"
-      :title="isEditing ? 'Editar Usuario' : 'Crear Usuario'"
-      @ok="isEditing ? updateUsuario() : createUsuario()"
-      @cancel="resetModal"
-    >
-      <a-form :form="form">
-        <a-form-item label="Nombre">
-          <a-input v-model:value="form.nombre" />
-        </a-form-item>
-        <a-form-item label="Apellido">
-          <a-input v-model:value="form.apellido" />
-        </a-form-item>
-        <a-form-item label="Email">
-          <a-input v-model:value="form.email" />
-        </a-form-item>
-        <a-form-item label="Teléfono">
-          <a-input v-model:value="form.telefono" />
-        </a-form-item>
-        <a-form-item label="Dirección">
-          <a-input v-model:value="form.direccion" />
-        </a-form-item>
-        <a-form-item label="Contraseña" v-if="!isEditing">
-          <a-input type="password" v-model:value="form.contraseña" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <UserFormModal
+      v-model:visible="isModalVisible"
+      :isEditing="isEditing"
+      :form="form"
+      @create="createUsuarioHandler"
+      @update="updateUsuarioHandler"
+      @close="resetModal"
+    />
 
-    <a-modal
-        v-model:open="isDetailsModalVisible"
-        title="Detalles del Usuario"
-        @cancel="resetDetailsModal"
-        :footer="null"
-      >
-        <a-form :form="detailsForm" layout="vertical">
-          <a-form-item label="ID">
-            <a-input v-model:value="detailsForm.id" disabled />
-          </a-form-item>
-          <a-form-item label="Nombre">
-            <a-input v-model:value="detailsForm.nombre" disabled />
-          </a-form-item>
-          <a-form-item label="Apellido">
-            <a-input v-model:value="detailsForm.apellido" disabled />
-          </a-form-item>
-          <a-form-item label="Email">
-            <a-input v-model:value="detailsForm.email" disabled />
-          </a-form-item>
-          <a-form-item label="Teléfono">
-            <a-input v-model:value="detailsForm.telefono" disabled />
-          </a-form-item>
-          <a-form-item label="Dirección">
-            <a-input v-model:value="detailsForm.direccion" disabled />
-          </a-form-item>
-          <a-form-item label="Roles">
-            <a-list
-              :data-source="detailsForm.roles"
-              bordered
-              size="small"
-            >
-        <a-list-item v-for="role in detailsForm.roles" :key="role.id">
-          {{ role.name }} - {{ role.description }}
-        </a-list-item>
-      </a-list>
-    </a-form-item>
-  </a-form>
-</a-modal>
+    <UserDetailsModal
+      v-model:visible="isDetailsModalVisible"
+      :detailsForm="detailsForm"
+      @close="resetDetailsModal"
+    />
 
-
-    <a-modal
+    <ConfirmDeleteModal
       v-model:visible="isDeleteModalVisible"
-      title="Confirmar Eliminación"
-      @ok="deleteUsuario()"
+      @confirm="deleteUsuarioHandler"
       @cancel="resetDeleteModal"
-    >
-      <p>¿Estás seguro de que deseas eliminar este usuario?</p>
-    </a-modal>
+    />
   </a-layout>
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons-vue';
-import axios from 'axios';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons-vue';
+import { notification, Input } from 'ant-design-vue';
+import { getUsuarios, createUsuario, updateUsuario, deleteUsuario, getUsuarioById } from '@/api/usuario';
+import UserFormModal from '@/components/user/UserFormModal.vue';
+import UserDetailsModal from '@/components/user/UserDetailsModal.vue';
+import ConfirmDeleteModal from '@/components/user/ConfirmDeleteModal.vue';
 
 export default {
   components: {
@@ -111,9 +69,15 @@ export default {
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
+    SearchOutlined,
+    UserFormModal,
+    UserDetailsModal,
+    ConfirmDeleteModal,
+    Input
   },
   setup() {
     const usuarios = ref([]);
+    const searchText = ref('');
     const isModalVisible = ref(false);
     const isDetailsModalVisible = ref(false);
     const isDeleteModalVisible = ref(false);
@@ -134,14 +98,35 @@ export default {
       email: '',
       telefono: '',
       direccion: '',
+      roles: [],
     });
 
     const columns = [
-      { title: 'Nombre', dataIndex: 'nombre' },
-      { title: 'Apellido', dataIndex: 'apellido' },
-      { title: 'Email', dataIndex: 'email' },
-      { title: 'Teléfono', dataIndex: 'telefono' },
-      { title: 'Dirección', dataIndex: 'direccion' },
+      {
+        title: 'Nombre',
+        dataIndex: 'nombre',
+        sorter: (a, b) => a.nombre.localeCompare(b.nombre),
+      },
+      {
+        title: 'Apellido',
+        dataIndex: 'apellido',
+        sorter: (a, b) => a.apellido.localeCompare(b.apellido),
+      },
+      {
+        title: 'Email',
+        dataIndex: 'email',
+        sorter: (a, b) => a.email.localeCompare(b.email),
+      },
+      {
+        title: 'Teléfono',
+        dataIndex: 'telefono',
+        sorter: (a, b) => a.telefono.localeCompare(b.telefono),
+      },
+      {
+        title: 'Dirección',
+        dataIndex: 'direccion',
+        sorter: (a, b) => a.direccion.localeCompare(b.direccion),
+      },
       {
         title: 'Acciones',
         key: 'actions',
@@ -149,16 +134,27 @@ export default {
       },
     ];
 
+    const filteredUsuarios = computed(() => {
+      return usuarios.value.filter(usuario =>
+        usuario.nombre.toLowerCase().includes(searchText.value.toLowerCase())
+      );
+    });
+
     const fetchUsuarios = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/usuarios', {
-          headers: { Authorization: token },
-        });
-        usuarios.value = response.data.data;
+        const data = await getUsuarios(token);
+        usuarios.value = data.data;
       } catch (error) {
-        console.error('Error al obtener usuarios:', error);
+        notification.error({
+          message: 'Error',
+          description: 'Error al obtener usuarios.',
+        });
       }
+    };
+
+    const handleSearch = (event) => {
+      searchText.value = event.target.value;
     };
 
     const showCreateModal = () => {
@@ -173,29 +169,57 @@ export default {
       isModalVisible.value = true;
     };
 
-    const createUsuario = async () => {
+    const createUsuarioHandler = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.post('http://localhost:3001/usuarios', form, {
-          headers: { Authorization: token },
-        });
+        await createUsuario(form, token);
         fetchUsuarios();
         resetModal();
+        notification.success({
+          message: 'Éxito',
+          description: 'Usuario creado correctamente.',
+        });
       } catch (error) {
-        console.error('Error al crear usuario:', error);
+        notification.error({
+          message: 'Error',
+          description: 'Error al crear usuario.',
+        });
       }
     };
 
-    const updateUsuario = async () => {
+    const updateUsuarioHandler = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/usuarios/${form.id}`, form, {
-          headers: { Authorization: token },
-        });
+        await updateUsuario(form.id, form, token);
         fetchUsuarios();
         resetModal();
+        notification.success({
+          message: 'Éxito',
+          description: 'Usuario actualizado correctamente.',
+        });
       } catch (error) {
-        console.error('Error al actualizar usuario:', error);
+        notification.error({
+          message: 'Error',
+          description: 'Error al actualizar usuario.',
+        });
+      }
+    };
+
+    const viewDetails = async (usuario) => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await getUsuarioById(usuario.id, token);
+        if (response.data) {
+          Object.assign(detailsForm, response.data, {
+            roles: response.data.Roles || [],
+          });
+        }
+        isDetailsModalVisible.value = true;
+      } catch (error) {
+        notification.error({
+          message: 'Error',
+          description: 'Error al obtener detalles del usuario.',
+        });
       }
     };
 
@@ -204,30 +228,28 @@ export default {
       isDeleteModalVisible.value = true;
     };
 
-    const deleteUsuario = async () => {
+    const deleteUsuarioHandler = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3001/usuarios/${form.id}`, {
-          headers: { Authorization: token },
-        });
+        await deleteUsuario(form.id, token);
         fetchUsuarios();
         resetDeleteModal();
+        notification.success({
+          message: 'Éxito',
+          description: 'Usuario eliminado correctamente.',
+        });
       } catch (error) {
-        console.error('Error al eliminar usuario:', error);
+        notification.error({
+          message: 'Error',
+          description: 'Error al eliminar usuario.',
+        });
       }
     };
 
-    const viewDetails = (usuario) => {
-      detailsForm.id = usuario.id;
-      detailsForm.nombre = usuario.nombre;
-      detailsForm.apellido = usuario.apellido;
-      detailsForm.email = usuario.email;
-      detailsForm.telefono = usuario.telefono;
-      detailsForm.direccion = usuario.direccion;
-      detailsForm.roles = usuario.Roles || []; // Asegúrate de que roles esté presente
-      isDetailsModalVisible.value = true;
+    const resetModal = () => {
+      isModalVisible.value = false;
+      resetForm();
     };
-
 
     const resetForm = () => {
       Object.assign(form, {
@@ -241,25 +263,11 @@ export default {
       });
     };
 
-    const resetModal = () => {
-      resetForm();
-      isModalVisible.value = false;
-    };
-
     const resetDetailsModal = () => {
-      Object.assign(detailsForm, {
-        id: '',
-        nombre: '',
-        apellido: '',
-        email: '',
-        telefono: '',
-        direccion: '',
-      });
       isDetailsModalVisible.value = false;
     };
 
     const resetDeleteModal = () => {
-      form.id = null;
       isDeleteModalVisible.value = false;
     };
 
@@ -267,24 +275,31 @@ export default {
 
     return {
       usuarios,
+      columns,
       isModalVisible,
-      isDetailsModalVisible,
-      isDeleteModalVisible,
       isEditing,
       form,
+      isDetailsModalVisible,
       detailsForm,
-      columns,
+      isDeleteModalVisible,
       showCreateModal,
       showEditModal,
-      createUsuario,
-      updateUsuario,
-      confirmDelete,
-      deleteUsuario,
+      createUsuarioHandler,
+      updateUsuarioHandler,
       viewDetails,
+      confirmDelete,
+      deleteUsuarioHandler,
       resetModal,
       resetDetailsModal,
       resetDeleteModal,
+      handleSearch,
+      filteredUsuarios,
+      searchIcon: SearchOutlined
     };
   },
 };
 </script>
+
+<style scoped>
+/* Agrega aquí tus estilos personalizados */
+</style>
