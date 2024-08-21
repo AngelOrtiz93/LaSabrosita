@@ -1,20 +1,40 @@
 <template>
   <a-layout class="admin-dashboard-layout">
-    <a-layout-headera>
-      <a-button type="primary" @click="showCreateModal">
+    <a-layout-header class="header">
+      <a-button 
+        type="primary" 
+        @click="showCreateModal" 
+        style="margin-right: 16px;" 
+        v-if="hasPermission('Crear Producto')">
         <PlusOutlined /> Crear Producto
       </a-button>
-    </a-layout-headera>
+      <a-input
+        placeholder="Buscar por Nombre, Descripción, o ID"
+        style="width: 400px; margin: 16px 0;"
+        @input="handleSearch"
+      >
+        <template #prefix>
+          <SearchOutlined />
+        </template>
+      </a-input>
+    </a-layout-header>
+
     <a-layout-content>
-      <a-table :columns="columns" :data-source="productos" rowKey="id">
+      <a-table 
+        :columns="columns" 
+        :data-source="filteredProductos" 
+        rowKey="id"
+        @change="handleTableChange"
+        :pagination="false"
+      >
         <template v-slot:actions="{ record }">
-          <a-button type="link" @click="showEditModal(record)">
+          <a-button type="link" @click="showEditModal(record)" v-if="hasPermission('Actualizar Producto')">
             <EditOutlined />
           </a-button>
-          <a-button type="link" @click="viewDetails(record)">
+          <a-button type="link" @click="viewDetails(record)" v-if="hasPermission('Obtener Producto por ID')">
             <EyeOutlined />
           </a-button>
-          <a-button type="link" danger @click="confirmDelete(record.id)">
+          <a-button type="link" danger @click="confirmDelete(record.id)" v-if="hasPermission('Eliminar Producto')">
             <DeleteOutlined />
           </a-button>
         </template>
@@ -30,7 +50,6 @@
       </a-table>
     </a-layout-content>
 
-    <!-- Modal para Crear/Editar Producto -->
     <a-modal
       v-model:open="isModalVisible"
       :title="isEditing ? 'Editar Producto' : 'Crear Producto'"
@@ -56,7 +75,6 @@
       </a-form>
     </a-modal>
 
-    <!-- Modal para Confirmar Eliminación -->
     <a-modal
       v-model:visible="isDeleteModalVisible"
       title="Confirmar Eliminación"
@@ -66,17 +84,15 @@
       <p>¿Estás seguro de que deseas eliminar este producto?</p>
     </a-modal>
 
-    <!-- Modal para Ver Imagen -->
     <a-modal
       v-model:open="isImageModalVisible"
       title="Imagen del Producto"
-      footer={null}
+      footer="La Sabrosita, sabor que se disfruta al instante"
       @cancel="resetImageModal"
     >
       <img :src="selectedImageUrl" style="width: 100%; height: auto;" />
     </a-modal>
 
-    <!-- Modal para Ver Detalles del Producto -->
     <a-modal
       v-model:open="isDetailsModalVisible"
       title="Detalles del Producto"
@@ -108,8 +124,8 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons-vue';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
 import { notification } from 'ant-design-vue';
 
@@ -119,9 +135,11 @@ export default {
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
+    SearchOutlined,
   },
   setup() {
     const productos = ref([]);
+    const searchText = ref('');
     const isModalVisible = ref(false);
     const isDeleteModalVisible = ref(false);
     const isImageModalVisible = ref(false);
@@ -146,11 +164,11 @@ export default {
     });
 
     const columns = [
-      { title: 'Id', dataIndex: 'id' },
-      { title: 'Nombre', dataIndex: 'nombre' },
+      { title: 'ID', dataIndex: 'id', sorter: (a, b) => a.id.localeCompare(b.id) },
+      { title: 'Nombre', dataIndex: 'nombre', sorter: (a, b) => a.nombre.localeCompare(b.nombre) },
       { title: 'Descripción', dataIndex: 'descripcion' },
-      { title: 'Precio', dataIndex: 'precio' },
-      { title: 'Stock', dataIndex: 'stock' },
+      { title: 'Precio', dataIndex: 'precio', sorter: (a, b) => a.precio - b.precio },
+      { title: 'Stock', dataIndex: 'stock', sorter: (a, b) => a.stock - b.stock },
       {
         title: 'Imagen',
         key: 'imagen',
@@ -162,6 +180,14 @@ export default {
         slots: { customRender: 'actions' },
       },
     ];
+
+    const filteredProductos = computed(() => {
+      return productos.value.filter(producto =>
+        producto.nombre.toLowerCase().includes(searchText.value.toLowerCase()) || 
+        producto.descripcion.toLowerCase().includes(searchText.value.toLowerCase()) ||
+        producto.id.toString().includes(searchText.value.toLowerCase())
+      );
+    });
 
     const fetchProductos = async () => {
       try {
@@ -178,21 +204,29 @@ export default {
       }
     };
 
+    const handleSearch = (event) => {
+      searchText.value = event.target.value;
+    };
+
+    const hasPermission = (requiredPermission) => {
+      const userPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+      return userPermissions.includes(requiredPermission);
+    };
+
     const showCreateModal = () => {
-      resetForm();
-      isEditing.value = false;
-      isModalVisible.value = true;
+      if (hasPermission('Crear Producto')) {
+        resetForm();
+        isEditing.value = false;
+        isModalVisible.value = true;
+      }
     };
 
     const showEditModal = (producto) => {
-      form.id = producto.id;
-      form.nombre = producto.nombre;
-      form.descripcion = producto.descripcion;
-      form.precio = producto.precio;
-      form.stock = producto.stock;
-      form.imagenUrl = producto.imagenUrl;
-      isEditing.value = true;
-      isModalVisible.value = true;
+      if (hasPermission('Actualizar Producto')) {
+        Object.assign(form, producto);
+        isEditing.value = true;
+        isModalVisible.value = true;
+      }
     };
 
     const createProducto = async () => {
@@ -236,8 +270,10 @@ export default {
     };
 
     const confirmDelete = (id) => {
-      form.id = id;
-      isDeleteModalVisible.value = true;
+      if (hasPermission('Eliminar Producto')) {
+        form.id = id;
+        isDeleteModalVisible.value = true;
+      }
     };
 
     const deleteProducto = async () => {
@@ -260,33 +296,31 @@ export default {
       }
     };
 
-    const showImageModal = (imageUrl) => {
-      selectedImageUrl.value = imageUrl;
+    const showImageModal = (url) => {
+      selectedImageUrl.value = url;
       isImageModalVisible.value = true;
     };
 
     const viewDetails = (producto) => {
-      detailsForm.id = producto.id;
-      detailsForm.nombre = producto.nombre;
-      detailsForm.descripcion = producto.descripcion;
-      detailsForm.precio = producto.precio;
-      detailsForm.stock = producto.stock;
-      detailsForm.imagenUrl = producto.imagenUrl;
-      isDetailsModalVisible.value = true;
+      if (hasPermission('Obtener Producto por ID')) {
+        Object.assign(detailsForm, producto);
+        isDetailsModalVisible.value = true;
+      }
     };
 
     const resetForm = () => {
-      form.id = null;
-      form.nombre = '';
-      form.descripcion = '';
-      form.precio = 0;
-      form.stock = 0;
-      form.imagenUrl = '';
+      Object.assign(form, {
+        id: null,
+        nombre: '',
+        descripcion: '',
+        precio: 0,
+        stock: 0,
+        imagenUrl: '',
+      });
     };
 
     const resetModal = () => {
       isModalVisible.value = false;
-      resetForm();
     };
 
     const resetDeleteModal = () => {
@@ -295,10 +329,19 @@ export default {
 
     const resetImageModal = () => {
       isImageModalVisible.value = false;
+      selectedImageUrl.value = '';
     };
 
     const resetDetailsModal = () => {
       isDetailsModalVisible.value = false;
+      Object.assign(detailsForm, {
+        id: '',
+        nombre: '',
+        descripcion: '',
+        precio: 0,
+        stock: 0,
+        imagenUrl: '',
+      });
     };
 
     onMounted(() => {
@@ -306,17 +349,15 @@ export default {
     });
 
     return {
-      productos,
       columns,
+      filteredProductos,
       isModalVisible,
       isDeleteModalVisible,
       isImageModalVisible,
       isDetailsModalVisible,
       selectedImageUrl,
-      isEditing,
       form,
       detailsForm,
-      fetchProductos,
       showCreateModal,
       showEditModal,
       createProducto,
@@ -329,6 +370,23 @@ export default {
       resetDeleteModal,
       resetImageModal,
       resetDetailsModal,
+      handleSearch,
+      hasPermission,
+      handleTableChange: (pagination, filters, sorter) => {
+        const { field, order } = sorter;
+        if (field) {
+          const sortedProductos = [...productos.value].sort((a, b) => {
+            const aValue = a[field];
+            const bValue = b[field];
+            if (order === 'ascend') {
+              return aValue > bValue ? 1 : -1;
+            } else {
+              return aValue < bValue ? 1 : -1;
+            }
+          });
+          productos.value = sortedProductos;
+        }
+      },
     };
   },
 };
@@ -337,5 +395,21 @@ export default {
 <style scoped>
 .admin-dashboard-layout {
   min-height: 100vh;
+}
+
+.header {
+  background: #fff;
+  padding: 0;
+  line-height: 64px;
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header .logo {
+  height: 31px;
+  margin: 16px;
 }
 </style>

@@ -1,8 +1,8 @@
-// Servicios de autenticación
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Usuario = require('../models/usuario');
 const Role = require('../models/Role');
+const Permission = require('../models/permission');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -15,23 +15,40 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const generateToken = (id, roleIds, roleNames) => {
-  return jwt.sign({ id, roleIds, roleNames }, process.env.JWT_SECRET, { expiresIn: '1h' });
+const generateToken = (id, roleIds, roleNames, permissions) => {
+  return jwt.sign(
+    { id, roleIds, roleNames, permissions },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
 };
 
 const authenticateUsuario = async (email, password) => {
-  const usuario = await Usuario.findOne({ where: { email }, include: [Role] });
+  const usuario = await Usuario.findOne({
+    where: { email },
+    include: [
+      {
+        model: Role,
+        include: [{ model: Permission }]
+      }
+    ]
+  });
 
   if (!usuario || !(await bcrypt.compare(password, usuario.contraseña))) {
     throw new Error('Credenciales incorrectas');
   }
 
   const roles = usuario.Roles;
-  const token = generateToken(usuario.id, roles.map(role => role.id), roles.map(role => role.name));
+  const permissions = roles.flatMap(role => role.Permissions.map(permission => permission.name));
+  const token = generateToken(
+    usuario.id,
+    roles.map(role => role.id),
+    roles.map(role => role.name),
+    permissions
+  );
 
   return { token };
 };
-
 
 const getUsuarioByEmail = async (email) => {
   return await Usuario.findOne({ where: { email } });
@@ -43,7 +60,7 @@ const generateResetToken = (email) => {
 
 const sendResetEmail = async (email, resetToken) => {
   const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-  
+
   const mailOptions = {
     to: email,
     subject: 'Restablecimiento de Contraseña',
@@ -70,7 +87,6 @@ const sendResetEmail = async (email, resetToken) => {
 
   await transporter.sendMail(mailOptions);
 };
-
 
 const resetUsuarioPassword = async (email, newPassword) => {
   const hashedPassword = await bcrypt.hash(newPassword, 10);

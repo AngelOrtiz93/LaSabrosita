@@ -8,7 +8,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const authorize = require('../middleware/authorize');
 
 // Asignar permiso a rol
-router.post('/', authMiddleware, authorize('Crear Permiso'), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { roleId, permissionId } = req.body;
 

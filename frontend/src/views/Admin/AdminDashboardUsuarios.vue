@@ -1,30 +1,30 @@
 <template>
   <a-layout class="admin-dashboard-layout">
-    <a-layout-headera>
-  <a-button type="primary" @click="showCreateModal" style="margin-right: 16px;">
-    <PlusOutlined /> Crear Usuario
-  </a-button>
-  <a-input
-    placeholder="Buscar por nombre"
-    style="width: 300px; margin: 16px 0;"
-    @input="handleSearch"
-  >
-    <template #prefix>
-      <SearchOutlined />
-    </template>
-  </a-input>
-</a-layout-headera>
+    <a-layout-header class="header">
+      <a-button type="primary" @click="showCreateModal" style="margin-right: 16px;" v-if="hasPermission('Crear Usuario')">
+        <PlusOutlined /> Crear Usuario
+      </a-button>
+      <a-input
+        placeholder="Buscar por Nombre, Apellido, Email o Teléfono"
+        style="width: 400px; margin: 0;"
+        @input="handleSearch"
+      >
+        <template #prefix>
+          <SearchOutlined />
+        </template>
+      </a-input>
+    </a-layout-header>
 
-    <a-layout-content>
+    <a-layout-content class="content">
       <a-table :columns="columns" :data-source="filteredUsuarios" rowKey="id">
         <template v-slot:actions="{ record }">
-          <a-button type="link" @click="showEditModal(record)">
+          <a-button type="link" @click="showEditModal(record)" v-if="hasPermission('Actualizar Usuario')">
             <EditOutlined />
           </a-button>
-          <a-button type="link" @click="viewDetails(record)">
+          <a-button type="link" @click="viewDetails(record)" v-if="hasPermission('Obtener Usuario por ID')">
             <EyeOutlined />
           </a-button>
-          <a-button type="link" danger @click="confirmDelete(record.id)">
+          <a-button type="link" danger @click="confirmDelete(record.id)" v-if="hasPermission('Eliminar Usuario')">
             <DeleteOutlined />
           </a-button>
         </template>
@@ -136,10 +136,13 @@ export default {
 
     const filteredUsuarios = computed(() => {
       return usuarios.value.filter(usuario =>
-        usuario.nombre.toLowerCase().includes(searchText.value.toLowerCase())
+        usuario.nombre.toLowerCase().includes(searchText.value.toLowerCase()) || 
+        usuario.telefono.toLowerCase().includes(searchText.value.toLowerCase()) || 
+        usuario.apellido.toLowerCase().includes(searchText.value.toLowerCase()) || 
+        usuario.email.toLowerCase().includes(searchText.value.toLowerCase())
       );
     });
-
+    
     const fetchUsuarios = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -271,6 +274,11 @@ export default {
       isDeleteModalVisible.value = false;
     };
 
+    const hasPermission = (requiredPermission) => {
+      const userPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+      return userPermissions.includes(requiredPermission);
+    };
+
     onMounted(fetchUsuarios);
 
     return {
@@ -294,12 +302,38 @@ export default {
       resetDeleteModal,
       handleSearch,
       filteredUsuarios,
-      searchIcon: SearchOutlined
+      searchIcon: SearchOutlined,
+      hasPermission
     };
   },
 };
 </script>
 
 <style scoped>
-/* Agrega aquí tus estilos personalizados */
+.admin-dashboard-layout {
+  height: 100vh;
+}
+
+.header {
+  background: #fff;
+  padding: 0 16px;
+  line-height: 64px;
+  color: #000;
+  box-shadow: 0 2px 8px #f0f1f2;
+}
+
+.content {
+  margin: 16px;
+  padding: 24px;
+  background: #fff;
+  min-height: 280px;
+}
+
+.ant-table {
+  margin-top: 16px;
+}
+
+.ant-input {
+  width: 100%;
+}
 </style>

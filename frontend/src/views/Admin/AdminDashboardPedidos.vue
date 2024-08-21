@@ -24,12 +24,11 @@
       @cancel="resetDetailsModal"
       width="70%"
     >
-      <div v-if="selectedPedido">
-        <p><strong>ID:</strong> {{ selectedPedido.id }}</p>
-        <p><strong>Cliente ID:</strong> {{ selectedPedido.usuarioId }}</p>
+      <div v-if="selectedPedido"><br>
+        <p><strong>Numero de Pedido:</strong> {{ selectedPedido.id }}</p>
+        <p><strong>Nombre: </strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.nombre : 'No disponible' }}</p>
         <p><strong>Fecha del Pedido:</strong> {{ selectedPedido.fechaPedido }}</p>
-        <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p>
-        <p><strong>Usuario:</strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.nombre : 'No disponible' }}</p>
+        <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p><br>
         <a-table :columns="detailColumns" :data-source="selectedPedido.DetallePedidos" rowKey="id" />
       </div>
     </a-modal>
@@ -98,7 +97,7 @@ export default {
 
     const columns = [
       { title: 'ID', dataIndex: 'id' },
-      { title: 'Usuario ID', dataIndex: 'usuarioId' },
+      { title: 'Nombre del Cliente', dataIndex: ['Usuario', 'nombre'] },
       { title: 'Fecha del Pedido', dataIndex: 'fechaPedido' },
       { title: 'Estado', dataIndex: 'estado' },
       {

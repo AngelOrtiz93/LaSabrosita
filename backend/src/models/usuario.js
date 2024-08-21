@@ -34,6 +34,10 @@ Usuarios.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  imagenUrl: {  
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

@@ -26,7 +26,8 @@ Pedido.init({
   estado: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'Pending'
+    values: ['Pendiente', 'En Proceso', 'Enviado', 'Entregado', 'Cancelado'],
+    defaultValue: 'Pendiente'
   }
 }, {
   sequelize,

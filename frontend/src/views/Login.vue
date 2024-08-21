@@ -15,7 +15,6 @@ import { useRouter } from 'vue-router';
 import { notification } from 'ant-design-vue';
 import { login } from '@/api/auth';
 import LoginForm from '@/components/auth/LoginForm.vue';
-import { errorMessages } from 'vue/compiler-sfc';
 
 const form = ref({
   email: '',
@@ -31,12 +30,13 @@ const handleLogin = async () => {
 
     // Decodifica el token para obtener la información del usuario
     const decodedToken = JSON.parse(atob(token.split('.')[1]));
-    const { roleNames = [], roleIds = [], id } = decodedToken;
+    const { roleNames = [], roleIds = [], permissions = [], id } = decodedToken;
 
-    // Almacena roleNames y roleIds en localStorage
-    localStorage.setItem('roleNames', JSON.stringify(roleNames)); // Guardamos roleNames como una cadena JSON
+    // Almacena roleNames, roleIds, permissions y userId en localStorage
+    localStorage.setItem('roleNames', JSON.stringify(roleNames));
+    localStorage.setItem('roleIds', JSON.stringify(roleIds));
+    localStorage.setItem('permissions', JSON.stringify(permissions)); // Guardar los permisos
     localStorage.setItem('userId', id);
-    localStorage.setItem('roleIds', JSON.stringify(roleIds)); // Guardamos roleIds como una cadena JSON
 
     if (roleNames.includes('Cliente')) {
       router.push('/cliente-dashboard');
@@ -54,7 +54,6 @@ const handleLogin = async () => {
     });
   }
 };
-
 </script>
 
 <style scoped>

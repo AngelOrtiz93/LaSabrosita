@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'; 
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   MenuUnfoldOutlined,
@@ -69,10 +69,9 @@ export default {
 
     const headerSelectedKeys = ref(['1']);
     const siderSelectedKeys = ref([]);
-    
-    // Declarar role dentro de setup
-    const roleNames = JSON.parse(localStorage.getItem('roleNames')) || []; // Asegúrate de que sea un array
-    
+
+    const userPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
+
     const navigateTo = (path, key, menuType = 'header') => {
       router.push(path);
       if (menuType === 'header') {
@@ -102,7 +101,7 @@ export default {
     const logout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
-      localStorage.removeItem('roleNames'); // Asegúrate de limpiar también roleNames
+      localStorage.removeItem('permissions');
       router.push('/login');
       headerSelectedKeys.value = ['logout'];
       siderSelectedKeys.value = [];
@@ -114,48 +113,51 @@ export default {
         label: 'Usuarios',
         icon: UserOutlined,
         path: '/administrador-dashboard/usuarios',
-        Roles: ['Administrador']
+        permissions: ['Obtener Todos los Usuarios']
       },
       {
         key: '4',
         label: 'Productos',
         icon: AppstoreOutlined,
         path: '/administrador-dashboard/productos',
-        Roles: ['Administrador', 'Empleado']
+        permissions: ['Obtener Todos los Productos', 'Actualizar Producto', 'Crear Producto', 'Eliminar Producto']
       },
       {
         key: '6',
         label: 'Roles',
         icon: SolutionOutlined,
         path: '/administrador-dashboard/roles',
-        Roles: ['Administrador']
+        permissions: ['Obtener Todos los Roles', 'Crear Rol', 'Actualizar Rol', 'Eliminar Rol']
       },
       {
         key: '7',
         label: 'Permisos',
         icon: SafetyOutlined,
         path: '/administrador-dashboard/permisos',
-        Roles: ['Administrador']
+        permissions: ['Obtener Todos los Permisos', 'Crear Permiso', 'Actualizar Permiso', 'Eliminar Permiso']
       },
       {
         key: '9',
         label: 'Pedidos',
         icon: ShoppingCartOutlined,
         path: '/administrador-dashboard/pedidos',
-        Roles: ['Administrador', 'Empleado', 'Domiciliario']
+        permissions: ['Obtener Todos los Pedidos', 'Actualizar Pedido', 'Crear Pedido', 'Eliminar Pedido']
       },
       {
         key: '10',
         label: 'Detalles Pedidos',
         icon: SettingOutlined,
         path: '/administrador-dashboard/detalles-pedidos',
-        Roles: ['Administrador', 'Empleado']
+        permissions: ['Obtener Todos los Detalles de Pedido', 'Actualizar Detalle de Pedido', 'Crear Detalle de Pedido', 'Eliminar Detalle de Pedido']
       }
     ]);
 
-    // Filtrar ítems según el rol del usuario
+    const hasPermission = (requiredPermissions) => {
+      return requiredPermissions.some(permission => userPermissions.includes(permission));
+    };
+
     const filteredItems = computed(() => {
-      return items.value.filter(item => item.Roles.some(role => roleNames.includes(role)));
+      return items.value.filter(item => hasPermission(item.permissions));
     });
 
     return {
@@ -166,8 +168,7 @@ export default {
       navigateTo,
       navigateToProfile,
       logout,
-      filteredItems,
-      roleNames  // Asegúrate de devolver roleNames
+      filteredItems
     };
   }
 };
@@ -208,5 +209,4 @@ export default {
   padding: 16px;
   cursor: pointer;
 }
-
 </style>
