@@ -1,34 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Importar path
 const sequelize = require('./config/db');
-
-// Importar modelos
-require('./models/pedido');
-require('./models/usuario');
-require('./models/producto');
-require('./models/detallePedido');
-require('./models/Role');
-require('./models/permission');
-require('./models/rolePermission');
-require('./models/UserRole'); // Asegúrate de que el modelo UserRole esté importado
-
-// Importar rutas
-const usuarioRoutes = require('./routes/usuarioRoutes');
-const clienteRoutes = require('./routes/clienteRoutes');
-const domiciliariosRoutes = require('./routes/domiciliarioRoutes');
-const empleadoRoutes = require('./routes/empleadoRoutes');
-const pedidoRoutes = require('./routes/pedidoRoutes');
-const productoRoutes = require('./routes/productoRoutes');
-const detallePedidoRoutes = require('./routes/detallePedidoRoutes');
-const authRoutes = require('./routes/authRoutes');
-const roleRoutes = require('./routes/roleRoutes');
-const permissionRoutes = require('./routes/permissionRoutes');
-const rolePermissionRoutes = require('./routes/rolePermissionRoutes');
-const userRoleRoutes = require('./routes/userRoleRoutes'); // Importar rutas de asignación de roles
-
-// Importar middleware
-const authMiddleware = require('./middleware/authMiddleware');
-const errorMiddleware = require('./middleware/errorMiddleware');
 
 // Crear instancia de Express
 const app = express();
@@ -41,19 +14,24 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configurar rutas
-app.use('/auth', authRoutes);
-app.use('/usuarios', usuarioRoutes);
-app.use('/clientes', clienteRoutes);
-app.use('/domiciliarios', domiciliariosRoutes);
-app.use('/empleados', empleadoRoutes);
-app.use('/pedidos', pedidoRoutes);
-app.use('/productos', productoRoutes);
-app.use('/detalle-pedidos', detallePedidoRoutes);
-app.use('/roles', roleRoutes);
-app.use('/permissions', permissionRoutes);
-app.use('/role-permissions', rolePermissionRoutes);
-app.use('/user-roles', userRoleRoutes); 
+// Configurar middleware para headers JSON
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
+
+// Configurar archivos estáticos
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Sirve archivos estáticos desde /uploads
+
+// Importar modelos
+require('./models/pedido');
+require('./models/usuario');
+require('./models/producto');
+require('./models/detallePedido');
+require('./models/Role');
+require('./models/permission');
+require('./models/rolePermission');
+require('./models/UserRole'); // Asegúrate de que el modelo UserRole esté importado
 
 // Definir relaciones entre modelos
 const Usuario = require('./models/usuario');
@@ -81,6 +59,38 @@ Role.belongsToMany(Permission, { through: RolePermission, foreignKey: 'roleId' }
 Permission.belongsToMany(Role, { through: RolePermission, foreignKey: 'permissionId' });
 
 RolePermission.belongsTo(Permission, { foreignKey: 'permissionId' });
+
+// Importar rutas
+const usuarioRoutes = require('./routes/usuarioRoutes');
+const clienteRoutes = require('./routes/clienteRoutes');
+const domiciliariosRoutes = require('./routes/domiciliarioRoutes');
+const empleadoRoutes = require('./routes/empleadoRoutes');
+const pedidoRoutes = require('./routes/pedidoRoutes');
+const productoRoutes = require('./routes/productoRoutes');
+const detallePedidoRoutes = require('./routes/detallePedidoRoutes');
+const authRoutes = require('./routes/authRoutes');
+const roleRoutes = require('./routes/roleRoutes');
+const permissionRoutes = require('./routes/permissionRoutes');
+const rolePermissionRoutes = require('./routes/rolePermissionRoutes');
+const userRoleRoutes = require('./routes/userRoleRoutes'); // Importar rutas de asignación de roles
+
+// Configurar rutas
+app.use('/auth', authRoutes);
+app.use('/usuarios', usuarioRoutes);
+app.use('/clientes', clienteRoutes);
+app.use('/domiciliarios', domiciliariosRoutes);
+app.use('/empleados', empleadoRoutes);
+app.use('/pedidos', pedidoRoutes);
+app.use('/productos', productoRoutes);
+app.use('/detalle-pedidos', detallePedidoRoutes);
+app.use('/roles', roleRoutes);
+app.use('/permissions', permissionRoutes);
+app.use('/role-permissions', rolePermissionRoutes);
+app.use('/user-roles', userRoleRoutes); 
+
+// Importar middleware
+const authMiddleware = require('./middleware/authMiddleware');
+const errorMiddleware = require('./middleware/errorMiddleware');
 
 // Manejo de errores
 app.use(errorMiddleware);

@@ -1,76 +1,86 @@
 <template>
-  <a-layout class="cliente-dashboard-layout">
+  <a-layout class="client-dashboard-layout">
     <a-layout-header class="header">
       <div class="logo">
         <img src="@/assets/logo.png" alt="Logo" />
       </div>
-      <a-menu theme="dark" mode="horizontal" :default-selected-keys="['1']">
-        <a-menu-item key="1" @click="navigateTo('/cliente-dashboard')">Home</a-menu-item>
-        <a-menu-item key="2" @click="navigateTo('/cliente-dashboard/products')">Products</a-menu-item>
-        <a-menu-item key="3" @click="navigateToProfile()">Profile</a-menu-item>
-        <a-menu-item key="4" @click="logout">Logout</a-menu-item>
+      <a-menu
+        theme="dark"
+        mode="horizontal"
+        :selected-keys="headerSelectedKeys"
+      >
+        <a-menu-item key="1" @click="navigateTo('/cliente-dashboard', '1')">Home</a-menu-item>
+        <a-menu-item key="3" @click="navigateTo('/cliente-dashboard/pedidos', '3')">Mis Pedidos</a-menu-item>
+        <a-menu-item key="logout" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
-    <a-layout-content class="content">
-      <router-view></router-view>
-    </a-layout-content>
-    <a-layout-footer class="footer">Restaurante La Sabrosita ©2024</a-layout-footer>
+    <a-layout>
+      <a-layout-content class="content">
+        <router-view></router-view>
+      </a-layout-content>
+    </a-layout>
+    <a-layout-footer class="footer">Fast Food Restaurant ©2024</a-layout-footer>
   </a-layout>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router';
+<script>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const router = useRouter();
+export default {
+  setup() {
+    const router = useRouter();
+    const headerSelectedKeys = ref(['1']);
 
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userId');
-  router.push('/login');
-};
+    const navigateTo = (path, key) => {
+      router.push(path);
+      headerSelectedKeys.value = [key];
+    };
 
-const navigateTo = (path) => {
-  router.push(path);
-};
+    const logout = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      router.push('/login');
+      headerSelectedKeys.value = ['logout'];
+    };
 
-const navigateToProfile = () => {
-  const userId = localStorage.getItem('userId');
-  if (userId) {
-    router.push(`/cliente-dashboard/profile/${userId}`);
-  } else {
-    console.error('User ID no disponible');
+    return {
+      headerSelectedKeys,
+      navigateTo,
+      logout
+    };
   }
 };
 </script>
 
 <style scoped>
-.cliente-dashboard-layout {
+.client-dashboard-layout {
   min-height: 100vh;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #001529;
-  padding: 0 20px;
-  height: 64px;
+  padding: 0 16px;
 }
+
 .logo {
   width: 260px;
   height: 50px;
   display: flex;
   align-items: center;
 }
+
 .logo img {
   width: 100%;
   height: auto;
 }
+
 .content {
-  padding: 50px;
-  display: flex;
-  justify-content: center;
+  margin: 16px;
 }
+
 .footer {
   text-align: center;
 }

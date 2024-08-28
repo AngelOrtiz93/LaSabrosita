@@ -24,9 +24,13 @@
       <a-form-item label="Roles">
         <a-tag v-for="role in detailsForm.roles" :key="role.id">{{ role.name }}</a-tag>
       </a-form-item>
+      <a-form-item label="Imagen">
+        <a-img :src="detailsForm.imagenUrl" alt="Imagen del usuario" style="width: 100px; height: 100px; object-fit: cover;" />
+      </a-form-item>
     </a-form>
   </a-modal>
 </template>
+
 
 <script>
 export default {
@@ -50,3 +54,4 @@ export default {
   },
 };
 </script>
+

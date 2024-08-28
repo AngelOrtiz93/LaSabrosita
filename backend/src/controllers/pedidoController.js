@@ -2,9 +2,33 @@ const pedidoService = require('../services/pedidoService');
 
 // Manejo de errores general
 const handleError = (res, error, customMessage) => {
-  console.error(customMessage, error);
-  res.status(500).json({ error: customMessage });
+  console.error(customMessage, error.message); // Mostrar solo el mensaje de error
+  res.status(500).json({ error: customMessage, details: error.message });
 };
+
+
+
+// Obtener todos los pedidos del cliente autenticado
+exports.getPedidosByUsuario = async (req, res) => {
+  try {
+    const usuarioId = req.params.usuarioId;
+
+    if (!usuarioId) {
+      return res.status(400).json({ message: 'El parámetro usuarioId es necesario' });
+    }
+
+    const pedidos = await pedidoService.getPedidosByUsuario(usuarioId);
+
+    if (pedidos.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron pedidos para el usuario especificado' });
+    }
+
+    res.json(pedidos);
+  } catch (error) {
+    handleError(res, error, 'Error al obtener los pedidos');
+  }
+};
+
 
 // Obtener todos los pedidos
 exports.getAllPedidos = async (req, res) => {

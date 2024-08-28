@@ -41,7 +41,8 @@ export const deleteUsuario = async (id, token) => {
 export const updateUsuario = async (id, usuarioData, token) => {
   try {
     const response = await axios.put(`${API_URL}/${id}`, usuarioData, {
-      headers: { Authorization: token }
+      headers: { Authorization: token },
+      'Content-Type': 'multipart/form-data',
     });
     return response;
   } catch (error) {
@@ -53,7 +54,8 @@ export const updateUsuario = async (id, usuarioData, token) => {
 export const createUsuario = async (usuarioData, token) => {
   try {
     const response = await axios.post(API_URL, usuarioData, {
-      headers: { Authorization: token }
+      headers: { Authorization: token },
+      'Content-Type': 'multipart/form-data',
     });
     return response;
   } catch (error) {

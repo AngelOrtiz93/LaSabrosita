@@ -1,7 +1,12 @@
 <template>
   <a-layout class="admin-dashboard-layout">
     <a-layout-header class="header">
-      <a-button type="primary" @click="showCreateModal" style="margin-right: 16px;" v-if="hasPermission('Crear Usuario')">
+      <a-button
+        type="primary"
+        @click="showCreateModal"
+        style="margin-right: 16px;"
+        v-if="hasPermission('Crear Usuario')"
+      >
         <PlusOutlined /> Crear Usuario
       </a-button>
       <a-input
@@ -18,13 +23,26 @@
     <a-layout-content class="content">
       <a-table :columns="columns" :data-source="filteredUsuarios" rowKey="id">
         <template v-slot:actions="{ record }">
-          <a-button type="link" @click="showEditModal(record)" v-if="hasPermission('Actualizar Usuario')">
+          <a-button
+            type="link"
+            @click="showEditModal(record)"
+            v-if="hasPermission('Actualizar Usuario')"
+          >
             <EditOutlined />
           </a-button>
-          <a-button type="link" @click="viewDetails(record)" v-if="hasPermission('Obtener Usuario por ID')">
+          <a-button
+            type="link"
+            @click="viewDetails(record)"
+            v-if="hasPermission('Obtener Usuario por ID')"
+          >
             <EyeOutlined />
           </a-button>
-          <a-button type="link" danger @click="confirmDelete(record.id)" v-if="hasPermission('Eliminar Usuario')">
+          <a-button
+            type="link"
+            danger
+            @click="confirmDelete(record.id)"
+            v-if="hasPermission('Eliminar Usuario')"
+          >
             <DeleteOutlined />
           </a-button>
         </template>
@@ -90,6 +108,7 @@ export default {
       telefono: '',
       direccion: '',
       contraseña: '',
+      imagen: null
     });
     const detailsForm = reactive({
       id: '',
@@ -99,39 +118,17 @@ export default {
       telefono: '',
       direccion: '',
       roles: [],
+      imagenUrl: ''
     });
 
     const columns = [
-      {
-        title: 'Nombre',
-        dataIndex: 'nombre',
-        sorter: (a, b) => a.nombre.localeCompare(b.nombre),
-      },
-      {
-        title: 'Apellido',
-        dataIndex: 'apellido',
-        sorter: (a, b) => a.apellido.localeCompare(b.apellido),
-      },
-      {
-        title: 'Email',
-        dataIndex: 'email',
-        sorter: (a, b) => a.email.localeCompare(b.email),
-      },
-      {
-        title: 'Teléfono',
-        dataIndex: 'telefono',
-        sorter: (a, b) => a.telefono.localeCompare(b.telefono),
-      },
-      {
-        title: 'Dirección',
-        dataIndex: 'direccion',
-        sorter: (a, b) => a.direccion.localeCompare(b.direccion),
-      },
-      {
-        title: 'Acciones',
-        key: 'actions',
-        slots: { customRender: 'actions' },
-      },
+      { title: 'Nombre', dataIndex: 'nombre', sorter: (a, b) => a.nombre.localeCompare(b.nombre) },
+      { title: 'Apellido', dataIndex: 'apellido', sorter: (a, b) => a.apellido.localeCompare(b.apellido) },
+      { title: 'Email', dataIndex: 'email', sorter: (a, b) => a.email.localeCompare(b.email) },
+      { title: 'Teléfono', dataIndex: 'telefono', sorter: (a, b) => a.telefono.localeCompare(b.telefono) },
+      { title: 'Dirección', dataIndex: 'direccion', sorter: (a, b) => a.direccion.localeCompare(b.direccion) },
+      { title: 'Imagen', dataIndex: 'imagenUrl', scopedSlots: { customRender: 'image' } },
+      { title: 'Acciones', key: 'actions', slots: { customRender: 'actions' } }
     ];
 
     const filteredUsuarios = computed(() => {
@@ -142,17 +139,14 @@ export default {
         usuario.email.toLowerCase().includes(searchText.value.toLowerCase())
       );
     });
-    
+
     const fetchUsuarios = async () => {
       try {
         const token = localStorage.getItem('token');
         const data = await getUsuarios(token);
         usuarios.value = data.data;
       } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Error al obtener usuarios.',
-        });
+        notification.error({ message: 'Error', description: 'Error al obtener usuarios.' });
       }
     };
 
@@ -166,47 +160,67 @@ export default {
       isModalVisible.value = true;
     };
 
-    const showEditModal = (usuario) => {
-      Object.assign(form, usuario);
+    const showEditModal = async (usuario) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await getUsuarioById(usuario.id, token);
+    if (response.data) {
+      Object.assign(form, response.data);
       isEditing.value = true;
       isModalVisible.value = true;
-    };
+    } else {
+      notification.error({ message: 'Error', description: 'Usuario no encontrado.' });
+    }
+  } catch (error) {
+    notification.error({ message: 'Error', description: 'Error al obtener detalles del usuario.' });
+  }
+};
+
 
     const createUsuarioHandler = async () => {
       try {
         const token = localStorage.getItem('token');
-        await createUsuario(form, token);
+        const formData = new FormData();
+        Object.keys(form).forEach(key => {
+          if (key === 'imagen' && form[key]) {
+            formData.append(key, form[key]);
+          } else {
+            formData.append(key, form[key] || '');
+          }
+        });
+        await createUsuario(formData, token);
         fetchUsuarios();
         resetModal();
-        notification.success({
-          message: 'Éxito',
-          description: 'Usuario creado correctamente.',
-        });
+        notification.success({ message: 'Éxito', description: 'Usuario creado correctamente.' });
       } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Error al crear usuario.',
-        });
+        notification.error({ message: 'Error', description: 'Error al crear usuario.' });
       }
     };
 
     const updateUsuarioHandler = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await updateUsuario(form.id, form, token);
-        fetchUsuarios();
-        resetModal();
-        notification.success({
-          message: 'Éxito',
-          description: 'Usuario actualizado correctamente.',
-        });
-      } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Error al actualizar usuario.',
-        });
+  try {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    Object.keys(form).forEach(key => {
+      if (key === 'imagen' && form[key]) {
+        formData.append(key, form[key]);
+      } else {
+        formData.append(key, form[key] || '');
       }
-    };
+    });
+    if (form.id) {
+      await updateUsuario(form.id, formData, token);
+      fetchUsuarios();
+      resetModal();
+      notification.success({ message: 'Éxito', description: 'Usuario actualizado correctamente.' });
+    } else {
+      notification.error({ message: 'Error', description: 'ID de usuario no especificado.' });
+    }
+  } catch (error) {
+    notification.error({ message: 'Error', description: 'Error al actualizar usuario.' });
+  }
+};
+
 
     const viewDetails = async (usuario) => {
       try {
@@ -215,14 +229,12 @@ export default {
         if (response.data) {
           Object.assign(detailsForm, response.data, {
             roles: response.data.Roles || [],
+            imagenUrl: response.data.imagenUrl || ''
           });
         }
         isDetailsModalVisible.value = true;
       } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Error al obtener detalles del usuario.',
-        });
+        notification.error({ message: 'Error', description: 'Error al obtener detalles del usuario.' });
       }
     };
 
@@ -237,21 +249,16 @@ export default {
         await deleteUsuario(form.id, token);
         fetchUsuarios();
         resetDeleteModal();
-        notification.success({
-          message: 'Éxito',
-          description: 'Usuario eliminado correctamente.',
-        });
+        notification.success({ message: 'Éxito', description: 'Usuario eliminado correctamente.' });
       } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Error al eliminar usuario.',
-        });
+        notification.error({ message: 'Error', description: 'Error al eliminar usuario.' });
       }
     };
 
     const resetModal = () => {
       isModalVisible.value = false;
       resetForm();
+      isEditing.value = false;
     };
 
     const resetForm = () => {
@@ -263,6 +270,7 @@ export default {
         telefono: '',
         direccion: '',
         contraseña: '',
+        imagen: null
       });
     };
 
@@ -302,38 +310,23 @@ export default {
       resetDeleteModal,
       handleSearch,
       filteredUsuarios,
-      searchIcon: SearchOutlined,
       hasPermission
     };
-  },
+  }
 };
 </script>
 
 <style scoped>
 .admin-dashboard-layout {
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .header {
-  background: #fff;
   padding: 0 16px;
-  line-height: 64px;
-  color: #000;
-  box-shadow: 0 2px 8px #f0f1f2;
+  background: #fff;
 }
 
 .content {
-  margin: 16px;
-  padding: 24px;
-  background: #fff;
-  min-height: 280px;
-}
-
-.ant-table {
-  margin-top: 16px;
-}
-
-.ant-input {
-  width: 100%;
+  padding: 16px;
 }
 </style>

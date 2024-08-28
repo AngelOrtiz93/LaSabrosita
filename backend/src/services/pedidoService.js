@@ -25,6 +25,18 @@ exports.getAllPedidos = async () => {
   }
 };
 
+// Obtener pedidos por cliente
+exports.getPedidosByUsuario = async (usuarioId) => {
+  try {
+    return await Pedido.findAll({
+      where: { usuarioId: usuarioId }
+    });
+  } catch (error) {
+    throw new Error('Error al obtener pedidos del usuario: ' + error.message);
+  }
+};
+
+
 // Obtener un pedido por ID con detalles y el nombre del usuario
 exports.getPedidoById = async (id) => {
   try {

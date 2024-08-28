@@ -91,14 +91,14 @@ const routes = [
         component: () => import('@/views/Cliente/ClienteDashboardHome.vue') // Vista de inicio para cliente
       },
       {
+        path: 'pedidos',
+        name: 'ClienteDashboardPedidos',
+        component: () => import('@/views/Cliente/ClienteDashboardPedidos.vue') // Vista de inicio para cliente
+      },
+      {
         path: 'profile/:id',
         name: 'ClienteDashboardProfile',
         component: () => import('@/views/Cliente/ClienteDashboardProfile.vue') // Vista de perfil para cliente
-      },
-      {
-        path: 'products',
-        name: 'ClienteDashboardProducts',
-        component: () => import('@/views/Cliente/ClienteDashboardProducts.vue') // Vista de productos para cliente
       }
     ]
   }

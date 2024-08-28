@@ -9,6 +9,10 @@
     <a-layout-content class="user-profile-content">
       <a-card title="Detalles del Usuario" class="user-profile-card">
         <a-form :model="user" layout="vertical">
+          <a-form-item>
+            <img :src="getImageUrl(user.imagenUrl)" alt="Imagen de perfil" class="profile-image" />
+            <input v-if="editing" type="file" @change="handleImageUpload" accept="image/*" class="upload-input" />
+          </a-form-item>
           <a-form-item label="Nombre">
             <a-input v-model:value="user.nombre" :disabled="!editing" />
           </a-form-item>
@@ -33,6 +37,7 @@
     </a-layout-content>
   </a-layout>
 </template>
+
 
 <script>
 import { ref, onMounted } from 'vue';
@@ -59,17 +64,14 @@ export default {
     const router = useRouter();
     const userId = route.params.id;
 
+    const getImageUrl = (imagenUrl) => `http://localhost:3001${imagenUrl}`;
+
     async function fetchUser() {
       try {
-        if (!userId) {
-          throw new Error('User ID no disponible');
-        }
-
+        if (!userId) throw new Error('User ID no disponible');
         const token = localStorage.getItem('token');
         const response = await axios.get(`http://localhost:3001/usuarios/${userId}`, {
-          headers: {
-            Authorization: token,
-          }
+          headers: { Authorization: token },
         });
         user.value = response.data.data;
       } catch (error) {
@@ -85,9 +87,7 @@ export default {
         try {
           const token = localStorage.getItem('token');
           await axios.put(`http://localhost:3001/usuarios/${userId}`, user.value, {
-            headers: {
-              Authorization: token ,
-            }
+            headers: { Authorization: token },
           });
           editing.value = false;
           notification.success({
@@ -105,13 +105,39 @@ export default {
       }
     };
 
+    const handleImageUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('imagen', file);
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`http://localhost:3001/usuarios/${userId}/upload`, formData, {
+          headers: {
+            Authorization: token,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        user.value.imagenUrl = response.data.imagenUrl;
+        notification.success({
+          message: 'Éxito',
+          description: 'La imagen se ha subido correctamente.',
+        });
+      } catch (error) {
+        notification.error({
+          message: 'Error al subir imagen',
+          description: error.response ? error.response.data : error.message,
+        });
+      }
+    };
+
     const handleDelete = async () => {
       try {
         const token = localStorage.getItem('token');
         await axios.delete(`http://localhost:3001/usuarios/${userId}`, {
-          headers: {
-            Authorization: token ,
-          }
+          headers: { Authorization: token },
         });
         localStorage.removeItem('token');
         localStorage.removeItem('userId');
@@ -137,7 +163,7 @@ export default {
         cancelText: 'Cancelar',
         onOk() {
           handleDelete();
-        }
+        },
       });
     };
 
@@ -154,41 +180,47 @@ export default {
       editing,
       goBack,
       handleEdit,
+      handleImageUpload,
       showDeleteConfirm,
+      getImageUrl,
     };
   },
 };
 </script>
 
+
 <style scoped>
 .user-profile-layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f0f2f5;
 }
 
 .user-profile-header {
   background: #fff;
+  width: 100%;
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-content h1 {
   margin: 0;
 }
 
-.back-button {
-  margin: 0;
-}
-
 .user-profile-content {
   padding: 24px;
+  width: 80%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .user-profile-card {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .actions {
@@ -201,5 +233,17 @@ export default {
   color: #fff;
   background-color: #f5222d;
   border-color: #f5222d;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+}
+
+.upload-input {
+  margin-top: 16px;
 }
 </style>

@@ -52,7 +52,7 @@ const updateUsuario = async (id, data) => {
     }
 
     const usuario = await Usuario.findByPk(id);
-
+    
     if (data.roleId && data.roleId.length > 0) {
       await usuario.setRoles(data.roleId);
     }
@@ -67,6 +67,7 @@ const updateUsuario = async (id, data) => {
     throw new Error('Error al actualizar usuario: ' + error.message);
   }
 };
+
 
 const deleteUsuario = async (id) => {
   try {
