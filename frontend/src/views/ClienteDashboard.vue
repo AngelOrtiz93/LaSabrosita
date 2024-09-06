@@ -10,7 +10,9 @@
         :selected-keys="headerSelectedKeys"
       >
         <a-menu-item key="1" @click="navigateTo('/cliente-dashboard', '1')">Home</a-menu-item>
-        <a-menu-item key="3" @click="navigateTo('/cliente-dashboard/pedidos', '3')">Mis Pedidos</a-menu-item>
+        <!-- Uso del ID del usuario desde localStorage para navegar al perfil, solo si localStorage está disponible -->
+        <a-menu-item key="2" @click="navigateTo(profilePath, '2')">Perfil</a-menu-item>
+        <a-menu-item key="3" @click="navigateTo('/cliente-dashboard/pedidos', '3')">Mis Pedidos</a-menu-item>        
         <a-menu-item key="logout" @click="logout">Logout</a-menu-item>
       </a-menu>
     </a-layout-header>
@@ -24,7 +26,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
@@ -38,16 +40,28 @@ export default {
     };
 
     const logout = () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+      }
       router.push('/login');
       headerSelectedKeys.value = ['logout'];
     };
 
+    // Calcula la ruta del perfil solo si localStorage está disponible
+    const profilePath = computed(() => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const userId = localStorage.getItem('userId');
+        return `/cliente-dashboard/profile/${userId}`;
+      }
+      return '/cliente-dashboard/profile'; // Ruta por defecto si localStorage no está disponible
+    });
+
     return {
       headerSelectedKeys,
       navigateTo,
-      logout
+      logout,
+      profilePath
     };
   }
 };

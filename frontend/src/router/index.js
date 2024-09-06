@@ -6,7 +6,6 @@ import ResetPassword from '@/views/ResetPassword.vue';
 import AdminDashboard from '@/views/AdminDashboard.vue';
 import ClienteDashboard from '@/views/ClienteDashboard.vue';
 
-// Define the base URL explicitly
 const baseURL = '';
 
 const routes = [
@@ -93,7 +92,7 @@ const routes = [
       {
         path: 'pedidos',
         name: 'ClienteDashboardPedidos',
-        component: () => import('@/views/Cliente/ClienteDashboardPedidos.vue') // Vista de inicio para cliente
+        component: () => import('@/views/Cliente/ClienteDashboardPedidos.vue') // Vista de pedidos para cliente
       },
       {
         path: 'profile/:id',

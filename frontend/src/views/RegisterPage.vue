@@ -14,7 +14,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { register } from '@/api/auth';
-import RegisterForm from '@/components/auth/RegisterForm.vue'; // Asegúrate de que la ruta sea correcta
+import RegisterForm from '@/components/auth/RegisterFormComponent.vue'; // Asegúrate de que la ruta sea correcta
 
 const form = ref({
   nombre: '',

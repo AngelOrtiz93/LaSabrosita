@@ -14,7 +14,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { notification } from 'ant-design-vue';
 import { login } from '@/api/auth';
-import LoginForm from '@/components/auth/LoginForm.vue';
+import LoginForm from '@/components/auth/LoginFormComponent.vue';
 
 const form = ref({
   email: '',
@@ -28,14 +28,12 @@ const handleLogin = async () => {
     const response = await login(form.value);
     const { token } = response;
 
-    // Decodifica el token para obtener la información del usuario
     const decodedToken = JSON.parse(atob(token.split('.')[1]));
     const { roleNames = [], roleIds = [], permissions = [], id } = decodedToken;
 
-    // Almacena roleNames, roleIds, permissions y userId en localStorage
     localStorage.setItem('roleNames', JSON.stringify(roleNames));
     localStorage.setItem('roleIds', JSON.stringify(roleIds));
-    localStorage.setItem('permissions', JSON.stringify(permissions)); // Guardar los permisos
+    localStorage.setItem('permissions', JSON.stringify(permissions));
     localStorage.setItem('userId', id);
 
     if (roleNames.includes('Cliente')) {
@@ -44,7 +42,6 @@ const handleLogin = async () => {
       router.push('/administrador-dashboard');
     }
   } catch (error) {
-    // Muestra una notificación de error si ocurre un problema
     const errorMessage = error.response?.data?.message || error.message;
 
     notification.error({
