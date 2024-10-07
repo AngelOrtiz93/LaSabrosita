@@ -30,5 +30,5 @@ const handleForgotPassword = async (formData) => {
 </script>
 
 <style scoped>
-@import '@/assets/auth/common.css';
+@import '@/assets/auth/common.css'; /* Importa el archivo de estilos global */
 </style>

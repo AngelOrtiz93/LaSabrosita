@@ -99,13 +99,24 @@ export default {
     };
 
     const logout = () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('permissions');
-      router.push('/login');
-      headerSelectedKeys.value = ['logout'];
-      siderSelectedKeys.value = [];
-    };
+  // Eliminar todas las entradas relevantes del localStorage
+  localStorage.removeItem('token');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('permissions');
+  localStorage.removeItem('roleIds');
+  localStorage.removeItem('roleNames');
+  localStorage.removeItem('cartItems'); // Si tienes un carrito
+  // Agrega cualquier otro item que necesites eliminar aquí
+  
+  // Redirigir a la página de inicio de sesión
+  router.push('/login');
+  
+  // Restablecer las claves seleccionadas
+  headerSelectedKeys.value = ['logout'];
+  siderSelectedKeys.value = [];
+};
+
+
 
     const items = ref([
       {

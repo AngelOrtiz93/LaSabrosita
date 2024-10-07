@@ -1,249 +1,255 @@
 <template>
   <a-layout class="user-profile-layout">
-    <a-layout-header class="user-profile-header">
-      <div class="header-content">
-        <h1>Perfil del Usuario</h1>
-        <a-button @click="goBack" class="back-button">Volver</a-button>
-      </div>
-    </a-layout-header>
     <a-layout-content class="user-profile-content">
-      <a-card title="Detalles del Usuario" class="user-profile-card">
-        <a-form :model="user" layout="vertical">
-          <a-form-item>
-            <img :src="getImageUrl(user.imagenUrl)" alt="Imagen de perfil" class="profile-image" />
-            <input v-if="editing" type="file" @change="handleImageUpload" accept="image/*" class="upload-input" />
-          </a-form-item>
-          <a-form-item label="Nombre">
-            <a-input v-model:value="user.nombre" :disabled="!editing" />
-          </a-form-item>
-          <a-form-item label="Apellido">
-            <a-input v-model:value="user.apellido" :disabled="!editing" />
-          </a-form-item>
-          <a-form-item label="Correo Electrónico">
-            <a-input v-model:value="user.email" :disabled="!editing" />
-          </a-form-item>
-          <a-form-item label="Teléfono">
-            <a-input v-model:value="user.telefono" :disabled="!editing" />
-          </a-form-item>
-          <a-form-item label="Dirección">
-            <a-input v-model:value="user.direccion" :disabled="!editing" />
-          </a-form-item>
-        </a-form>
-        <div class="actions">
-          <a-button type="primary" @click="handleEdit">{{ editing ? 'Guardar' : 'Editar' }}</a-button>
-          <a-button type="danger" class="delete-button" @click="showDeleteConfirm">Eliminar Cuenta</a-button>
+      <div class="profile-container">
+        <!-- Información de la imagen -->
+        <div class="profile-image-section">
+          <div class="image-container" @click="expandImage">
+            <img
+              v-if="userDetails.imagenUrl"
+              :src="getImageUrl(userDetails.imagenUrl)"
+              alt="Imagen de perfil"
+              class="profile-image"
+            />
+          </div>
         </div>
-      </a-card>
+
+        <!-- Información del usuario -->
+        <div class="profile-info-section">
+          <h2 class="profile-title">Información del Usuario</h2>
+          <div class="info-item">
+            <strong>Nombre:</strong>
+            <p>{{ userDetails.nombre }}</p>
+          </div>
+          <div class="info-item">
+            <strong>Apellido:</strong>
+            <p>{{ userDetails.apellido }}</p>
+          </div>
+          <div class="info-item">
+            <strong>Email:</strong>
+            <p>{{ userDetails.email }}</p>
+          </div>
+          <div class="info-item">
+            <strong>Teléfono:</strong>
+            <p>{{ userDetails.telefono }}</p>
+          </div>
+          <div class="info-item">
+            <strong>Dirección:</strong>
+            <p>{{ userDetails.direccion }}</p>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="action-buttons">
+            <a-button type="primary" @click="showEditModal">Editar Perfil</a-button>
+            <a-button type="danger" @click="showDeleteConfirm">Eliminar Cuenta</a-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal para mostrar la imagen expandida -->
+      <a-modal v-model:visible="isImageModalVisible" footer={null} @cancel="closeImageModal">
+        <img :src="getImageUrl(userDetails.imagenUrl)" alt="Imagen ampliada" class="expanded-profile-image" />
+      </a-modal>
+
+      <UserFormModal
+        v-model:visible="isModalVisible"
+        :isEditing="true"
+        :form="form"
+        @update="updateProfileHandler"
+        @close="resetModal"
+      />
     </a-layout-content>
   </a-layout>
 </template>
 
-
 <script>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useRoute, useRouter } from 'vue-router';
-import { Button, Layout, Card, Form, Input, Modal, notification } from 'ant-design-vue';
+import { ref, reactive, onMounted } from 'vue';
+import { notification, Modal } from 'ant-design-vue';
+import { getUsuarioById, updateUsuario, deleteUsuario } from '@/api/usuario'; 
+import UserFormModal from '@/components/user/UserFormModal.vue';
 
 export default {
   components: {
-    'a-layout': Layout,
-    'a-layout-header': Layout.Header,
-    'a-layout-content': Layout.Content,
-    'a-button': Button,
-    'a-card': Card,
-    'a-form': Form,
-    'a-form-item': Form.Item,
-    'a-input': Input,
-    'a-modal': Modal,
+    UserFormModal
   },
   setup() {
-    const user = ref({});
-    const editing = ref(false);
-    const route = useRoute();
-    const router = useRouter();
-    const userId = route.params.id;
+    const userDetails = ref({});
+    const isModalVisible = ref(false);
+    const isImageModalVisible = ref(false);
+    const form = reactive({
+      id: null,
+      nombre: '',
+      apellido: '',
+      email: '',
+      telefono: '',
+      direccion: '',
+      imagen: null
+    });
+
+    const fetchUserDetails = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+        const response = await getUsuarioById(userId, token);
+        userDetails.value = response.data;
+        Object.assign(form, response.data); 
+      } catch (error) {
+        notification.error({ message: 'Error', description: 'Error al obtener detalles del usuario.' });
+      }
+    };
 
     const getImageUrl = (imagenUrl) => `http://localhost:3001${imagenUrl}`;
 
-    async function fetchUser() {
-      try {
-        if (!userId) throw new Error('User ID no disponible');
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:3001/usuarios/${userId}`, {
-          headers: { Authorization: token },
-        });
-        user.value = response.data.data;
-      } catch (error) {
-        notification.error({
-          message: 'Error al obtener usuario',
-          description: error.response ? error.response.data : error.message,
-        });
-      }
-    }
-
-    const handleEdit = async () => {
-      if (editing.value) {
-        try {
-          const token = localStorage.getItem('token');
-          await axios.put(`http://localhost:3001/usuarios/${userId}`, user.value, {
-            headers: { Authorization: token },
-          });
-          editing.value = false;
-          notification.success({
-            message: 'Éxito',
-            description: 'El perfil se ha actualizado correctamente.',
-          });
-        } catch (error) {
-          notification.error({
-            message: 'Error al actualizar',
-            description: error.response ? error.response.data : error.message,
-          });
-        }
-      } else {
-        editing.value = true;
-      }
-    };
-
-    const handleImageUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append('imagen', file);
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`http://localhost:3001/usuarios/${userId}/upload`, formData, {
-          headers: {
-            Authorization: token,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        user.value.imagenUrl = response.data.imagenUrl;
-        notification.success({
-          message: 'Éxito',
-          description: 'La imagen se ha subido correctamente.',
-        });
-      } catch (error) {
-        notification.error({
-          message: 'Error al subir imagen',
-          description: error.response ? error.response.data : error.message,
-        });
-      }
-    };
-
-    const handleDelete = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3001/usuarios/${userId}`, {
-          headers: { Authorization: token },
-        });
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        notification.success({
-          message: 'Éxito',
-          description: 'La cuenta se ha eliminado correctamente.',
-        });
-        router.push('/login');
-      } catch (error) {
-        notification.error({
-          message: 'Error al eliminar cuenta',
-          description: error.response ? error.response.data : error.message,
-        });
-      }
+    const showEditModal = () => {
+      isModalVisible.value = true;
     };
 
     const showDeleteConfirm = () => {
       Modal.confirm({
         title: '¿Estás seguro de que deseas eliminar tu cuenta?',
-        content: 'Esta acción no se puede deshacer.',
-        okText: 'Sí, eliminar',
-        okType: 'danger',
-        cancelText: 'Cancelar',
+        content: 'Esta acción es irreversible y perderás todos tus datos.',
         onOk() {
-          handleDelete();
+          deleteAccount(); 
         },
+        onCancel() {
+          console.log('Cancelado');
+        }
       });
     };
 
-    const goBack = () => {
-      router.back();
+    const deleteAccount = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+        await deleteUsuario(userId, token); 
+        notification.success({ message: 'Éxito', description: 'Cuenta eliminada correctamente.' });
+      } catch (error) {
+        notification.error({ message: 'Error', description: 'Error al eliminar cuenta.' });
+      }
     };
 
-    onMounted(() => {
-      fetchUser();
-    });
+    const updateProfileHandler = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        Object.keys(form).forEach(key => {
+          if (key === 'imagen' && form[key]) {
+            formData.append(key, form[key]);
+          } else {
+            formData.append(key, form[key] || '');
+          }
+        });
+        await updateUsuario(form.id, formData, token);
+        fetchUserDetails(); 
+        resetModal();
+        notification.success({ message: 'Éxito', description: 'Perfil actualizado correctamente.' });
+      } catch (error) {
+        notification.error({ message: 'Error', description: 'Error al actualizar perfil.' });
+      }
+    };
+
+    const resetModal = () => {
+      isModalVisible.value = false;
+    };
+
+    const expandImage = () => {
+      isImageModalVisible.value = true;
+    };
+
+    const closeImageModal = () => {
+      isImageModalVisible.value = false;
+    };
+
+    onMounted(fetchUserDetails);
 
     return {
-      user,
-      editing,
-      goBack,
-      handleEdit,
-      handleImageUpload,
+      userDetails,
+      isModalVisible,
+      isImageModalVisible,
+      form,
+      showEditModal,
       showDeleteConfirm,
+      updateProfileHandler,
+      resetModal,
       getImageUrl,
+      expandImage,
+      closeImageModal
     };
-  },
+  }
 };
 </script>
 
-
 <style scoped>
+/* Centrar el contenido */
 .user-profile-layout {
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  min-height: 100vh;
   background-color: #f0f2f5;
 }
 
-.user-profile-header {
-  background: #fff;
-  width: 100%;
-  padding: 0 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.header-content h1 {
-  margin: 0;
-}
-
 .user-profile-content {
-  padding: 24px;
-  width: 80%;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.user-profile-card {
-  width: 100%;
-}
-
-.actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 24px;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
 }
 
-.delete-button {
-  color: #fff;
-  background-color: #f5222d;
-  border-color: #f5222d;
+.profile-container {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  width: 450px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.profile-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.profile-image-section {
+  margin-bottom: 20px;
 }
 
 .profile-image {
-  width: 120px;
-  height: 120px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 16px;
+  border: 3px solid #1890ff; /* Borde azul */
+  cursor: pointer;
+  transition: transform 0.2s; /* Efecto de hover */
 }
 
-.upload-input {
-  margin-top: 16px;
+.profile-image:hover {
+  transform: scale(1.05); /* Aumenta la imagen al pasar el ratón */
+}
+
+.profile-info-section {
+  text-align: left;
+}
+
+.info-item {
+  margin-bottom: 12px;
+}
+
+.info-item strong {
+  color: #1890ff; /* Color azul para etiquetas */
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* Estilo para el modal */
+.expanded-profile-image {
+  width: 100%;
+  height: auto;
 }
 </style>

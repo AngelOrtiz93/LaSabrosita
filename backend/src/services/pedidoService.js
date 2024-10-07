@@ -12,11 +12,11 @@ exports.getAllPedidos = async () => {
       include: [
         {
           model: Usuario,
-          attributes: ['nombre'] // Incluye el campo nombre del Usuario
+          attributes: ['nombre', 'telefono', 'direccion'] // Incluye el campo nombre del Usuario
         },
         {
           model: DetallePedido,
-          include: [Producto]
+          include: [Producto] // Incluye los detalles del pedido
         }
       ]
     });
@@ -29,13 +29,27 @@ exports.getAllPedidos = async () => {
 exports.getPedidosByUsuario = async (usuarioId) => {
   try {
     return await Pedido.findAll({
-      where: { usuarioId: usuarioId }
+      where: { usuarioId: usuarioId },
+      include: [
+        {
+          model: Usuario,
+          attributes: ['nombre', 'telefono', 'direccion'] // Incluye los campos que necesitas
+        },
+        {
+          model: DetallePedido,
+          include: [
+            {
+              model: Producto,
+              attributes: ['nombre', 'precio', 'descripcion', 'stock', 'imagenUrl'] // Incluye atributos necesarios de Producto
+            }
+          ]
+        }
+      ]
     });
   } catch (error) {
     throw new Error('Error al obtener pedidos del usuario: ' + error.message);
   }
 };
-
 
 // Obtener un pedido por ID con detalles y el nombre del usuario
 exports.getPedidoById = async (id) => {
@@ -43,12 +57,12 @@ exports.getPedidoById = async (id) => {
     return await Pedido.findByPk(id, {
       include: [
         {
-          model: DetallePedido,
-          include: [Producto]
+          model: Usuario,
+          attributes: ['nombre', 'telefono', 'direccion'] // Incluye campos del Usuario
         },
         {
-          model: Usuario,
-          attributes: ['nombre'] // Incluye el campo nombre del Usuario
+          model: DetallePedido,
+          include: [Producto] // Incluye detalles del pedido
         }
       ]
     });
@@ -57,13 +71,19 @@ exports.getPedidoById = async (id) => {
   }
 };
 
-// Crear un nuevo pedido
 exports.createPedido = async (pedidoData) => {
   try {
     const { detalles, usuarioId, ...pedidoInfo } = pedidoData;
+
+    // Calcular el total
+    const total = detalles.reduce((sum, detalle) => {
+      return sum + (detalle.precioUnitario * detalle.cantidad); // Suponiendo que tienes estos campos en detalle
+    }, 0);
+
     const newPedido = await Pedido.create({
       ...pedidoInfo,
-      usuarioId // Incluye el usuarioId si es necesario
+      usuarioId,
+      total // Guarda el total calculado
     });
 
     if (detalles && detalles.length > 0) {
@@ -81,36 +101,19 @@ exports.createPedido = async (pedidoData) => {
   }
 };
 
-// Actualizar un pedido
-exports.updatePedido = async (id, pedidoData) => {
-  try {
-    const { detalles, usuarioId, ...pedidoInfo } = pedidoData;
-    const pedido = await Pedido.findByPk(id);
-    if (!pedido) throw new Error('Pedido no encontrado');
-
-    await pedido.update({
-      ...pedidoInfo,
-      usuarioId // Actualiza el usuarioId si es necesario
-    });
-
-    if (detalles) {
-      // Eliminar detalles existentes y agregar los nuevos
-      await DetallePedido.destroy({ where: { pedidoId: pedido.id } });
-
-      if (detalles.length > 0) {
-        await Promise.all(detalles.map(detalle => 
-          DetallePedido.create({
-            ...detalle,
-            pedidoId: pedido.id
-          })
-        ));
-      }
-    }
-
-    return pedido;
-  } catch (error) {
-    throw new Error('Error al actualizar pedido: ' + error.message);
+exports.updatePedido = async (id, data) => {
+  const pedido = await Pedido.findByPk(id);
+  if (!pedido) {
+    throw new Error('Pedido no encontrado');
   }
+
+  // Actualizar solo los campos permitidos
+  if (data.estado) {
+    pedido.estado = data.estado;
+  }
+
+  await pedido.save();
+  return pedido;
 };
 
 // Eliminar un pedido

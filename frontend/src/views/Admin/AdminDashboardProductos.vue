@@ -204,6 +204,26 @@ export default {
       }
     };
 
+    const selectProduct = (producto) => {
+  let selectedProducts = JSON.parse(localStorage.getItem('selectedProducts')) || [];
+  
+  // Verificar si el producto ya está seleccionado
+  if (!selectedProducts.some(p => p.id === producto.id)) {
+    selectedProducts.push(producto);
+    localStorage.setItem('selectedProducts', JSON.stringify(selectedProducts));
+    notification.success({
+      message: 'Éxito',
+      description: 'Producto seleccionado exitosamente.',
+    });
+  } else {
+    notification.info({
+      message: 'Información',
+      description: 'Este producto ya está seleccionado.',
+    });
+  }
+};
+
+
     const handleSearch = (event) => {
       searchText.value = event.target.value;
     };

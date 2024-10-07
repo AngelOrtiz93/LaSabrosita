@@ -3,10 +3,9 @@ const pedidoService = require('../services/pedidoService');
 // Manejo de errores general
 const handleError = (res, error, customMessage) => {
   console.error(customMessage, error.message); // Mostrar solo el mensaje de error
-  res.status(500).json({ error: customMessage, details: error.message });
+  const statusCode = error.statusCode || 500; // Puedes establecer un código de estado específico en el error
+  res.status(statusCode).json({ error: customMessage, details: error.message });
 };
-
-
 
 // Obtener todos los pedidos del cliente autenticado
 exports.getPedidosByUsuario = async (req, res) => {
@@ -23,18 +22,17 @@ exports.getPedidosByUsuario = async (req, res) => {
       return res.status(404).json({ message: 'No se encontraron pedidos para el usuario especificado' });
     }
 
-    res.json(pedidos);
+    res.status(200).json(pedidos);
   } catch (error) {
     handleError(res, error, 'Error al obtener los pedidos');
   }
 };
 
-
 // Obtener todos los pedidos
 exports.getAllPedidos = async (req, res) => {
   try {
     const pedidos = await pedidoService.getAllPedidos();
-    res.json(pedidos);
+    res.status(200).json(pedidos);
   } catch (error) {
     handleError(res, error, 'Error al obtener pedidos');
   }
@@ -46,7 +44,7 @@ exports.getPedidoById = async (req, res) => {
     const { id } = req.params;
     const pedido = await pedidoService.getPedidoById(id);
     if (!pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
-    res.json(pedido);
+    res.status(200).json(pedido);
   } catch (error) {
     handleError(res, error, 'Error al obtener pedido');
   }
@@ -55,6 +53,7 @@ exports.getPedidoById = async (req, res) => {
 // Crear un nuevo pedido
 exports.createPedido = async (req, res) => {
   try {
+    // Aquí podrías añadir validaciones para req.body
     const newPedido = await pedidoService.createPedido(req.body);
     res.status(201).json(newPedido);
   } catch (error) {
@@ -66,9 +65,10 @@ exports.createPedido = async (req, res) => {
 exports.updatePedido = async (req, res) => {
   try {
     const { id } = req.params;
+    // Aquí podrías añadir validaciones para req.body
     const updatedPedido = await pedidoService.updatePedido(id, req.body);
     if (!updatedPedido) return res.status(404).json({ error: 'Pedido no encontrado' });
-    res.json(updatedPedido);
+    res.status(200).json(updatedPedido);
   } catch (error) {
     handleError(res, error, 'Error al actualizar pedido');
   }
@@ -91,7 +91,7 @@ exports.getPedidosAsignadosDomiciliario = async (req, res) => {
   try {
     const { domiciliarioId } = req.params;
     const pedidos = await pedidoService.getPedidosAsignados(domiciliarioId);
-    res.json(pedidos);
+    res.status(200).json(pedidos);
   } catch (error) {
     handleError(res, error, 'Error al obtener pedidos asignados al domiciliario');
   }
@@ -102,7 +102,7 @@ exports.countPedidosCompletados = async (req, res) => {
   try {
     const { domiciliarioId } = req.params;
     const count = await pedidoService.countPedidosCompletados(domiciliarioId);
-    res.json({ count });
+    res.status(200).json({ count });
   } catch (error) {
     handleError(res, error, 'Error al contar pedidos completados por domiciliario');
   }
@@ -113,7 +113,7 @@ exports.getPedidosAsignadosEmpleado = async (req, res) => {
   try {
     const { empleadoId } = req.params;
     const pedidos = await pedidoService.getPedidosAsignadosEmpleado(empleadoId);
-    res.json(pedidos);
+    res.status(200).json(pedidos);
   } catch (error) {
     handleError(res, error, 'Error al obtener pedidos asignados al empleado');
   }
@@ -124,7 +124,7 @@ exports.countPedidosCompletadosEmpleado = async (req, res) => {
   try {
     const { empleadoId } = req.params;
     const count = await pedidoService.countPedidosCompletadosEmpleado(empleadoId);
-    res.json({ count });
+    res.status(200).json({ count });
   } catch (error) {
     handleError(res, error, 'Error al contar pedidos completados por empleado');
   }

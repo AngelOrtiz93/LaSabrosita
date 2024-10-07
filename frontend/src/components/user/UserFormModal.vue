@@ -13,7 +13,6 @@
       ref="userForm"
       enctype="multipart/form-data"
     >
-      <!-- Campos del formulario -->
       <a-form-item label="Nombre" :rules="rules.nombre">
         <a-input v-model:value="form.nombre" placeholder="Nombre" />
       </a-form-item>
@@ -34,7 +33,7 @@
         <a-input v-model:value="form.direccion" placeholder="Dirección" />
       </a-form-item>
 
-      <a-form-item label="Contraseña" :rules="rules.contraseña">
+      <a-form-item label="Contraseña" v-if="!isEditing" :rules="rules.contraseña">
         <a-input-password v-model:value="form.contraseña" placeholder="Contraseña" />
       </a-form-item>
 
@@ -73,7 +72,7 @@ export default {
       const file = event.target.files[0];
       if (file) {
         this.selectedFile = file;
-        this.form.imagen = file;  // Asigna el archivo a `form.imagen`
+        this.form.imagen = file; // Asigna el archivo a `form.imagen`
       }
     },
     async handleOk() {
@@ -82,8 +81,11 @@ export default {
 
         const formData = new FormData();
 
-        // Añadir los campos del formulario a FormData, excluyendo 'imagen'
+        // Añadir los campos del formulario a FormData, excluyendo 'imagen' y 'contraseña' si no es necesario
         Object.keys(this.form).forEach(key => {
+          if (this.isEditing && key === 'contraseña' && !this.form.contraseña) {
+            return; // No añadir contraseña si no se proporciona
+          }
           if (key !== 'imagen') {
             formData.append(key, this.form[key] || '');
           }
@@ -94,10 +96,8 @@ export default {
           formData.append('imagen', this.selectedFile);
         }
 
-        // Imprimir los datos del FormData para verificación
         console.log('Datos del FormData:', Array.from(formData.entries()));
 
-        // Emitir el evento adecuado basado en la edición
         if (this.isEditing) {
           this.$emit('update', formData);
         } else {
@@ -105,7 +105,7 @@ export default {
         }
       } catch (error) {
         console.error('Error en handleOk:', error);
-      } 
+      }
     },
     handleCancel() {
       this.$emit('close');
@@ -113,3 +113,6 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+</style>

@@ -1,7 +1,7 @@
 <template>
-  <a-layout class="layout login-layout">
-    <a-layout-content class="content login-content">
-      <a-card title="Iniciar sesión" class="card login-card">
+  <a-layout class="layout">
+    <a-layout-content class="content">
+      <a-card title="Iniciar sesión" class="card">
         <LoginForm :form="form" @submit="handleLogin" />
       </a-card>
     </a-layout-content>
@@ -51,8 +51,9 @@ const handleLogin = async () => {
     });
   }
 };
+
 </script>
 
 <style scoped>
-@import '@/assets/auth/common.css';
+@import '@/assets/auth/common.css'; /* Importa el archivo de estilos global */
 </style>

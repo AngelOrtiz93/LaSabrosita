@@ -59,57 +59,72 @@
     </a-button>
 
     <!-- Modal para el carrito de compras -->
-    <a-modal
-      v-model:visible="isModalVisible"
-      title="Carrito de Compras"
-      @ok="checkout"
-      @cancel="isModalVisible = false"
-      width="40%"
-      :footer="null"
-      class="cart-modal"
-    >
-      <template v-if="cartItems.length > 0">
-        <div class="cart-content">
-          <ul class="cart-item-list">
-            <li v-for="item in cartItems" :key="item.product.id" class="cart-item">
-              <img :src="item.product.imagenUrl" alt="Imagen del Artículo en el Carrito" class="cart-item-image" />
-              <div class="cart-item-info">
-                <p class="cart-item-name">{{ item.product.nombre }}</p>
-                <p>Cantidad: {{ item.quantity }}</p>
-                <p>Subtotal: $ {{ (item.quantity * item.product.precio).toFixed(2) }}</p>
-                <a-button type="danger" @click="removeFromCart(item.product)">Eliminar</a-button>
-              </div>
-            </li>
-          </ul>
-          <div class="total-price">
-            <p><strong>Total:</strong> $ {{ totalPrice.toFixed(2) }}</p>
+<a-modal
+  v-model:visible="isModalVisible"
+  title="Carrito de Compras"
+  @ok="checkout"
+  @cancel="isModalVisible = false"
+  width="40%"
+  :footer="null"
+  class="cart-modal"
+>
+  <template v-if="cartItems.length > 0">
+    <div class="cart-content">
+      <ul class="cart-item-list">
+        <li v-for="item in cartItems" :key="item.product.id" class="cart-item">
+          <img :src="item.product.imagenUrl" alt="Imagen del Artículo en el Carrito" class="cart-item-image" />
+          <div class="cart-item-info">
+            <p class="cart-item-name">{{ item.product.nombre }}</p>
+            <!-- Controles de cantidad -->
+            <div class="quantity-controls">
+              <a-button @click="decreaseQuantity(item)" :disabled="item.quantity <= 1">-</a-button>
+              <a-input-number v-model="item.quantity" @change="updateQuantity(item)" min="1" />
+              <a-button @click="increaseQuantity(item)">+</a-button>
+            </div>
+            <p>Subtotal: $ {{ (item.quantity * item.product.precio).toFixed(2) }}</p>
+            <a-button type="danger" @click="removeFromCart(item.product)">Eliminar</a-button>
           </div>
-        </div>
-      </template>
-      <template v-else>
-        <p>Tu carrito está vacío. Agrega productos para empezar a comprar.</p>
-      </template>
-      <div class="modal-footer">
-        <a-button @click="isModalVisible = false" class="cancel-button">Cancelar</a-button>
-        <a-button @click="checkout" type="primary" class="checkout-button">Comprar</a-button>
+        </li>
+      </ul>
+      <div class="total-price">
+        <p><strong>Total:</strong> $ {{ totalPrice.toFixed(2) }}</p>
       </div>
-    </a-modal>
+    </div>
+  </template>
+  <template v-else>
+    <p>Tu carrito está vacío. Agrega productos para empezar a comprar.</p>
+  </template>
+  <div class="modal-footer">
+    <a-button @click="isModalVisible = false" class="cancel-button">Cancelar</a-button>
+    <a-button @click="checkout" type="primary" class="checkout-button">Comprar</a-button>
+  </div>
+</a-modal>
+
 
     <!-- Modal para detalles del pedido -->
-    <a-modal
-      v-model:visible="isDetailsModalVisible"
-      title="Detalles del Pedido"
-      @ok="resetDetailsModal"
-      @cancel="resetDetailsModal"
-      width="80%"
-    >
-      <template v-if="selectedPedido">
-        <p><strong>Número de Pedido:</strong> {{ selectedPedido.id }}</p>
-        <p><strong>Fecha del Pedido:</strong> {{ new Date(selectedPedido.fechaPedido).toLocaleDateString() }}</p>
-        <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p>
-        <a-table :columns="detailColumns" :data-source="selectedPedido.DetallePedidos" rowKey="id" />
-      </template>
-    </a-modal>
+<a-modal
+  v-model:visible="isDetailsModalVisible"
+  title="Detalles del Pedido"
+  @ok="resetDetailsModal"
+  @cancel="resetDetailsModal"
+  width="80%"
+>
+  <template v-if="selectedPedido">
+    <p><strong>Número de Pedido:</strong> {{ selectedPedido.id }}</p>
+    <p><strong>Fecha del Pedido:</strong> {{ new Date(selectedPedido.fechaPedido).toLocaleDateString() }}</p>
+    <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p>
+
+    <!-- Tabla de detalles del pedido -->
+    <a-table :columns="detailColumns" :data-source="selectedPedido.DetallePedidos" rowKey="id" />
+
+    <!-- Mostrar subtotal y total del pedido -->
+    <div class="total-price">
+      <p><strong>Subtotal de Productos:</strong> ${{ calcularSubtotalPedido(selectedPedido.DetallePedidos).toFixed(2) }}</p>
+      <p><strong>Total del Pedido:</strong> ${{ calcularTotalPedido(selectedPedido.DetallePedidos).toFixed(2) }}</p>
+    </div>
+  </template>
+</a-modal>
+
   </a-layout>
 </template>
 
@@ -123,7 +138,7 @@ import { ShoppingCartOutlined } from '@ant-design/icons-vue';
 const API_URL_PEDIDOS = 'http://localhost:3001/pedidos';
 const API_URL_PRODUCTOS = 'http://localhost:3001/productos';
 const products = ref([]);
-const cartItems = ref([]);
+const cartItems = ref(JSON.parse(localStorage.getItem('cartItems')) || []); // Recuperar el carrito del localStorage
 const pedidos = ref([]);
 const isModalVisible = ref(false);
 const isDetailsModalVisible = ref(false);
@@ -162,6 +177,16 @@ const showDetailsModal = async (pedido) => {
   }
 };
 
+// Calcula el subtotal de cada producto en el pedido
+const calcularSubtotalPedido = (detallePedidos) => {
+  return detallePedidos.reduce((subtotal, detalle) => subtotal + detalle.cantidad * detalle.precioUnitario, 0);
+};
+
+// Calcula el total del pedido
+const calcularTotalPedido = (detallePedidos) => {
+  return calcularSubtotalPedido(detallePedidos); // Aquí asumimos que el total es igual al subtotal
+};
+
 onMounted(async () => {
   await getProducts();
   await getPedidos();
@@ -175,12 +200,43 @@ const addToCart = (product) => {
   } else {
     cartItems.value.push({ product, quantity: 1 });
   }
+  localStorage.setItem('cartItems', JSON.stringify(cartItems.value)); // Guardar el carrito en localStorage
 };
+
+// Funciones para manejar el carrito
+const increaseQuantity = (item) => {
+  item.quantity += 1;
+  updateCartTotal();
+};
+
+const decreaseQuantity = (item) => {
+  if (item.quantity > 1) {
+    item.quantity -= 1;
+    updateCartTotal();
+  }
+};
+
+const updateQuantity = (item) => {
+  if (item.quantity < 1) {
+    item.quantity = 1; // Prevención de valores negativos o cero
+  }
+  updateCartTotal();
+};
+
+const updateCartTotal = () => {
+  totalPrice.value = cartItems.value.reduce((total, item) => total + item.quantity * item.product.precio, 0);
+  localStorage.setItem('cartItems', JSON.stringify(cartItems.value)); // Guardar el carrito actualizado en localStorage
+};
+
+onMounted(() => {
+  updateCartTotal(); // Inicializa el cálculo del total
+});
 
 const removeFromCart = (product) => {
   const index = cartItems.value.findIndex(item => item.product.id === product.id);
   if (index !== -1) {
     cartItems.value.splice(index, 1);
+    localStorage.setItem('cartItems', JSON.stringify(cartItems.value)); // Actualizar localStorage al eliminar un producto
   }
 };
 
@@ -207,6 +263,7 @@ const checkout = async () => {
       });
 
       cartItems.value = [];
+      localStorage.removeItem('cartItems'); // Limpiar el carrito en localStorage
       isModalVisible.value = false;
       await getPedidos(); // Actualizar la lista de pedidos después del checkout
     } catch (error) {
@@ -275,77 +332,124 @@ const detailColumns = [
 ];
 </script>
 
+
 <style scoped>
-.cart-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-}
-
-.cart-count {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background-color: red;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 50%;
-  font-size: 12px;
-}
-
-.cart-modal {
-  padding: 16px;
-}
-
-.cart-item-list {
-  list-style: none;
-  padding: 0;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.cart-item-image {
-  width: 100px;
-  margin-right: 16px;
-}
-
-.cart-item-info {
-  flex: 1;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 16px;
-}
-
-.cancel-button {
-  background-color: #f0f0f0;
-}
-
-.checkout-button {
-  background-color: #1890ff;
-  color: white;
-}
-
+/* Estilos para la tarjeta del producto */
 .product-card {
-  text-align: center;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .product-image {
   width: 100%;
-  height: 150px;
+  height: 200px;
   object-fit: cover;
-  margin-bottom: 8px;
+}
+
+/* Estilos para el botón del carrito */
+.cart-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 24px;
+  background-color: #4caf50; /* Color del botón */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cart-button:hover {
+  background-color: #45a049; /* Color al pasar el mouse */
+}
+
+/* Estilos para el contenido del carrito */
+.cart-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background-color: #fff; /* Fondo blanco */
+}
+
+/* Estilos para los elementos del carrito */
+.cart-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cart-item:last-child {
+  border-bottom: none; /* Sin borde en el último elemento */
+}
+
+.cart-item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.cart-item-info {
+  flex-grow: 1;
+}
+
+/* Estilos para los controles de cantidad */
+.quantity-controls {
+  display: flex;
+  align-items: center;
 }
 
 .total-price {
-  text-align: right;
-  font-size: 18px;
-  margin-top: 16px;
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 18px; /* Tamaño de fuente del total */
+}
+
+/* Estilos para el modal */
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.cancel-button {
+  margin-right: 10px;
+  background-color: #f44336; /* Color rojo para el botón de cancelar */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+}
+
+.checkout-button {
+  background-color: #4caf50; /* Color verde para el botón de checkout */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+}
+
+/* Hover effects for buttons */
+.cancel-button:hover {
+  background-color: #d32f2f; /* Color más oscuro para el botón de cancelar */
+}
+
+.checkout-button:hover {
+  background-color: #45a049; /* Color más oscuro para el botón de checkout */
 }
 </style>
+

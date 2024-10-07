@@ -38,9 +38,8 @@ const handleRegister = async () => {
     message.error(error.response?.data?.message || 'Error al registrarse');
   }
 };
-
 </script>
 
 <style scoped>
-@import '@/assets/auth/common.css';
+@import '@/assets/auth/common.css'; /* Importa el archivo de estilos global */
 </style>

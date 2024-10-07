@@ -40,13 +40,17 @@ export default {
     };
 
     const logout = () => {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-      }
-      router.push('/login');
-      headerSelectedKeys.value = ['logout'];
-    };
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('roleNames');
+    localStorage.removeItem('roleIds');
+    localStorage.removeItem('permissions');
+  }
+  router.push('/login');
+  headerSelectedKeys.value = ['logout'];
+};
+
 
     // Calcula la ruta del perfil solo si localStorage está disponible
     const profilePath = computed(() => {

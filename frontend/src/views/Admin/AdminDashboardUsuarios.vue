@@ -201,13 +201,16 @@ export default {
   try {
     const token = localStorage.getItem('token');
     const formData = new FormData();
+    
+    // Solo agregar contraseña si se ha proporcionado
     Object.keys(form).forEach(key => {
       if (key === 'imagen' && form[key]) {
         formData.append(key, form[key]);
-      } else {
+      } else if (key !== 'contraseña' || form[key]) { // No agregar contraseña si es una edición y no hay nuevo valor
         formData.append(key, form[key] || '');
       }
     });
+
     if (form.id) {
       await updateUsuario(form.id, formData, token);
       fetchUsuarios();
@@ -220,6 +223,7 @@ export default {
     notification.error({ message: 'Error', description: 'Error al actualizar usuario.' });
   }
 };
+
 
 
     const viewDetails = async (usuario) => {

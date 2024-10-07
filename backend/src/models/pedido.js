@@ -1,3 +1,4 @@
+// models/pedido.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
@@ -28,6 +29,11 @@ Pedido.init({
     allowNull: false,
     values: ['Pendiente', 'En Proceso', 'Enviado', 'Entregado', 'Cancelado'],
     defaultValue: 'Pendiente'
+  },
+  total: { // Nuevo campo para el total del pedido
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   sequelize,

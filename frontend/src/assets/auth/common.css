@@ -1,19 +1,21 @@
-/* src/assets/auth/common.css */
-
+/* Estilos comunes para los layouts de autenticación */
 .layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: space-between; /* Espacia el contenido y el footer */
   align-items: center;
-  justify-content: center;
-  background-color: #f0f2f5; /* Color de fondo claro */
+  background-image: url('@/assets/fondo login.jpg'); /* Imagen de fondo común para todas las páginas */
+  background-size: cover; /* Asegura que la imagen cubra todo el fondo */
+  background-position: center; /* Centra la imagen de fondo */
 }
 
+/* Estilos específicos para el contenido principal (formulario) */
 .content {
   width: 100%;
   max-width: 400px;
   padding: 2rem;
-  margin-top: 50px; /* Aumenta el margen superior para mover el formulario más abajo */
+  margin-top: 50px; /* Ajusta el margen superior para separar del header */
 }
 
 .card {
@@ -21,6 +23,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Estilos para el formulario */
 .form {
   max-width: 100%;
   margin-top: 2rem; /* Ajusta este valor según sea necesario */
@@ -29,3 +32,13 @@
 .submit-button {
   width: 100%;
 }
+
+/* Estilo del footer para que ocupe todo el ancho y esté en la parte inferior */
+.footer {
+  width: 100%; /* El footer ocupa todo el ancho de la página */
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente para el footer */
+  padding: 10px 0; /* Espaciado dentro del footer */
+  position: relative; /* El footer se queda fijo al final del layout */
+  bottom: 0;
+} 
