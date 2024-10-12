@@ -4,6 +4,7 @@
     @update:visible="handleVisibilityChange"
     title="Detalles del Usuario"
     @cancel="handleCancel"
+    @ok="handleOK"
   >
     <a-form :model="detailsForm" layout="vertical" :disabled="true">
       <a-form-item label="Nombre">
@@ -25,12 +26,16 @@
         <a-tag v-for="role in detailsForm.roles" :key="role.id">{{ role.name }}</a-tag>
       </a-form-item>
       <a-form-item label="Imagen">
-        <a-img :src="detailsForm.imagenUrl" alt="Imagen del usuario" style="width: 100px; height: 100px; object-fit: cover;" />
+        <img 
+          :src="getImageUrl(detailsForm.imagenUrl)" 
+          alt="Imagen del usuario" 
+          style="width: 100px; height: 100px; object-fit: cover;" 
+          @error="handleImageError"
+        />
       </a-form-item>
     </a-form>
   </a-modal>
 </template>
-
 
 <script>
 export default {
@@ -45,13 +50,22 @@ export default {
     },
   },
   methods: {
+    getImageUrl(imagenUrl) {
+      return imagenUrl ? `http://localhost:3001${imagenUrl}` : 'ruta/a/imagen/placeholder.png';
+    },
     handleVisibilityChange(visible) {
       this.$emit('update:visible', visible);
     },
     handleCancel() {
       this.$emit('close');
     },
+    handleOK() {
+      this.$emit('close');
+    },
+    handleImageError() {
+      console.error("Error al cargar la imagen:", this.detailsForm.imagenUrl);
+      this.detailsForm.imagenUrl = ""; // Opcional: Para ocultar la imagen si hay un error
+    },
   },
 };
 </script>
-

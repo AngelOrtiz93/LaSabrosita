@@ -22,7 +22,14 @@
 
     <a-layout-content class="content">
       <a-table :columns="columns" :data-source="filteredUsuarios" rowKey="id">
-        <template v-slot:actions="{ record }">
+        <template #image="{ record }">
+          <img 
+            :src="getImageUrl(record.imagenUrl)" 
+            alt="Imagen del Usuario" 
+            style="width: 50px; height: 50px; object-fit: cover;" 
+          />
+        </template>
+        <template #actions="{ record }">
           <a-button
             type="link"
             @click="showEditModal(record)"
@@ -121,16 +128,25 @@ export default {
       imagenUrl: ''
     });
 
+    const getImageUrl = (imagenUrl) => {
+    return imagenUrl ? `http://localhost:3001${imagenUrl}` : ''; // Asegúrate de que la URL sea correcta
+  };
+
     const columns = [
       { title: 'Nombre', dataIndex: 'nombre', sorter: (a, b) => a.nombre.localeCompare(b.nombre) },
       { title: 'Apellido', dataIndex: 'apellido', sorter: (a, b) => a.apellido.localeCompare(b.apellido) },
       { title: 'Email', dataIndex: 'email', sorter: (a, b) => a.email.localeCompare(b.email) },
       { title: 'Teléfono', dataIndex: 'telefono', sorter: (a, b) => a.telefono.localeCompare(b.telefono) },
       { title: 'Dirección', dataIndex: 'direccion', sorter: (a, b) => a.direccion.localeCompare(b.direccion) },
-      { title: 'Imagen', dataIndex: 'imagenUrl', scopedSlots: { customRender: 'image' } },
+      { 
+        title: 'Imagen', 
+        dataIndex: 'imagenUrl', 
+        slots: { customRender: 'image' }  // Asegúrate de que esto sea correcto
+      },
       { title: 'Acciones', key: 'actions', slots: { customRender: 'actions' } }
     ];
 
+    
     const filteredUsuarios = computed(() => {
       return usuarios.value.filter(usuario =>
         usuario.nombre.toLowerCase().includes(searchText.value.toLowerCase()) || 
@@ -314,7 +330,8 @@ export default {
       resetDeleteModal,
       handleSearch,
       filteredUsuarios,
-      hasPermission
+      hasPermission,
+      getImageUrl
     };
   }
 };
