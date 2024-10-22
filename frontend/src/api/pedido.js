@@ -13,7 +13,7 @@ export const getPedidosAsignadosDomiciliario = async (domiciliarioId, token) => 
 // Contar pedidos completados por un domiciliario
 export const countPedidosCompletadosDomiciliario = async (domiciliarioId, token) => {
   const response = await axios.get(`${API_URL}/completados/domiciliario/${domiciliarioId}`, {
-    headers: { Authorization: token } // Sin 'Bearer'
+    headers: { Authorization: token } 
   });
   return response;
 };
