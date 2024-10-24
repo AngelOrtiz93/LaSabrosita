@@ -1,13 +1,16 @@
+// src/index.js o src/models/index.js
 const { Sequelize } = require('sequelize');
-const config = require('./config');
+const config = require('./config');  // Asegúrate de que la ruta sea correcta
 
+// Inicialización de Sequelize usando la configuración del entorno actual
 const sequelize = new Sequelize(
-  config.development.database,
-  config.development.username,
-  config.development.password,
+  config.database,
+  config.username,
+  config.password,
   {
-    host: config.development.host,
-    dialect: config.development.dialect, // Usando el dialecto de la configuración
+    host: config.host,
+    dialect: config.dialect, // Usando el dialecto de la configuración
+    port: config.port, // Usar el puerto correcto según la configuración
     dialectOptions: {
       charset: 'utf8mb4', // Configura el charset para la conexión
     },
@@ -18,4 +21,4 @@ const sequelize = new Sequelize(
   }
 );
 
-module.exports = sequelize;
+module.exports = sequelize; // Exporta la instancia de Sequelize
