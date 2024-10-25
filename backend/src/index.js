@@ -6,13 +6,13 @@ const sequelize = require('./config/db');
 // Crear instancia de Express
 const app = express();
 
-// Configurar middleware
 app.use(cors({
-  origin: 'http://localhost:3001',
+  origin: ['http://localhost:3001', 'https://lasabrosita-1.onrender.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
+
 
 // Configurar middleware para headers JSON
 app.use((req, res, next) => {
