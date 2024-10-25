@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/pedidos'; // Ajusta la URL según tu configuración
+const API_URL =  `${import.meta.env.VITE_API_URL}/pedidos`; // Ajusta la URL según tu configuración
 
 // Obtener pedidos asignados a un domiciliario
 export const getPedidosAsignadosDomiciliario = async (domiciliarioId, token) => {

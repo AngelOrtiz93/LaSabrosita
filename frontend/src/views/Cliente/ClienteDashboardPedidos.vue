@@ -115,8 +115,8 @@ import axios from 'axios';
 import { notification } from 'ant-design-vue';
 import { ShoppingCartOutlined } from '@ant-design/icons-vue';
 
-const API_URL_PEDIDOS = 'http://localhost:3001/pedidos';
-const API_URL_PRODUCTOS = 'http://localhost:3001/productos';
+const API_URL_PEDIDOS = `${import.meta.env.VITE_API_URL}/pedidos`;
+const API_URL_PRODUCTOS = `${import.meta.env.VITE_API_URL}/productos`;
 
 const products = ref([]);
 const cartItems = ref(JSON.parse(localStorage.getItem('cartItems')) || []);

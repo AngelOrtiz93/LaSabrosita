@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/detalle-pedidos';
+const API_URL = `${import.meta.env.VITE_API_URL}/detalle-pedidos`;
 
 // Obtener todos los detalles de pedido
 export const getDetallePedidos = async (token) => {

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/permissions';
+const API_URL =  `${import.meta.env.VITE_API_URL}/permissions`;
 
 // Obtener todos los permisos
 export const getPermisos = async (token) => {
