@@ -15,6 +15,8 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: 'postgres',  // PostgreSQL en producción
+    seederStorage: 'sequelize',
+    seederStorageTableName: 'sequelize_data',
     port: process.env.DB_PORT || 5432, // Puerto de PostgreSQL
     logging: false,  // Desactivar logs en producción
     dialectOptions: {
