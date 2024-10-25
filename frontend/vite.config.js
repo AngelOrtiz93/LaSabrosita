@@ -26,4 +26,9 @@ export default defineConfig({
   },
   // Configura la URL base de la aplicación, ajusta esta configuración si la aplicación no está en la raíz del servidor
   base: '', 
+  // Configuración del servidor para desarrollo
+  server: {
+    port: 4173, // Puerto que usará Vite para el servidor de desarrollo
+    host: '0.0.0.0', // Permite que el servidor escuche en todas las interfaces
+  },
 });
