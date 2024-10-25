@@ -154,7 +154,7 @@ export default {
     const fetchRoles = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/roles', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/roles`, {
           headers: { Authorization:  token },
         });
         roles.value = response.data;
@@ -166,7 +166,7 @@ export default {
     const fetchPermissions = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/permissions', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/permission`, {
           headers: { Authorization: token },
         });
         availablePermissions.value = response.data;
@@ -195,7 +195,7 @@ export default {
     const createRole = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.post('http://localhost:3001/roles', {
+        await axios.post(`${import.meta.env.VITE_API_URL}/roles`, {
           nombre: form.nombre,  // Usa 'name' en lugar de 'nombre' para alinear con el modelo
           descripcion: form.descripcion,
           permisos: form.permisos,
@@ -214,7 +214,7 @@ export default {
     const updateRole = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/roles/${form.id}`, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/roles/${form.id}`, {
           nombre: form.nombre,  // Usa 'name' en lugar de 'nombre' para alinear con el modelo
           descripcion: form.descripcion,
           permisos: form.permisos,
@@ -238,7 +238,7 @@ export default {
     const deleteRole = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3001/roles/${form.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/roles/${form.id}`, {
           headers: { Authorization: token },
         });
         fetchRoles();
@@ -253,7 +253,7 @@ export default {
     const viewDetails = async (role) => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:3001/roles/${role.id}`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/roles/${role.id}`, {
           headers: { Authorization: token },
         });
         selectedRole.value = response.data;

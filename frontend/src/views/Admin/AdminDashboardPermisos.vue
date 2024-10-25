@@ -135,7 +135,7 @@ export default {
     const fetchPermissions = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/permissions', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/permissions`, {
           headers: { Authorization: token },
         });
         permissions.value = response.data;
@@ -161,7 +161,7 @@ export default {
     const createPermission = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.post('http://localhost:3001/permissions', {
+        await axios.post(`${import.meta.env.VITE_API_URL}/permissions`, {
           nombre: form.nombre,
           descripcion: form.descripcion,
         }, {
@@ -179,7 +179,7 @@ export default {
     const updatePermission = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/permissions/${form.id}`, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/permissions/${form.id}`, {
           nombre: form.nombre,
           descripcion: form.descripcion,
         }, {
@@ -202,7 +202,7 @@ export default {
     const deletePermission = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3001/permissions/${form.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/permissions/${form.id}`, {
           headers: { Authorization: token },
         });
         fetchPermissions();

@@ -97,8 +97,8 @@ export default {
         notification.error({ message: 'Error', description: 'Error al obtener detalles del usuario.' });
       }
     };
-
-    const getImageUrl = (imagenUrl) => `http://localhost:3001${imagenUrl}`;
+    
+    const getImageUrl = (imagenUrl) => `${import.meta.env.VITE_API_URL}${imagenUrl}`;
 
     const showEditModal = () => {
       isModalVisible.value = true;

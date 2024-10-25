@@ -192,7 +192,7 @@ export default {
     const fetchProductos = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/productos', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/productos`, {
           headers: { Authorization: token },
         });
         productos.value = response.data;
@@ -252,7 +252,7 @@ export default {
     const createProducto = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.post('http://localhost:3001/productos', form, {
+        await axios.post(`${import.meta.env.VITE_API_URL}/productos`,form, {
           headers: { Authorization: token },
         });
         notification.success({
@@ -272,7 +272,7 @@ export default {
     const updateProducto = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/productos/${form.id}`, form, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/productos/${form.id}`, form, {
           headers: { Authorization: token },
         });
         notification.success({
@@ -299,7 +299,7 @@ export default {
     const deleteProducto = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:3001/productos/${form.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_URL}/productos/${form.id}`, {
           headers: { Authorization: token },
         });
         notification.success({

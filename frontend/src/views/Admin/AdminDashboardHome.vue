@@ -107,7 +107,7 @@ const fetchUsuarios = async () => {
   try {
     const token = localStorage.getItem('token');
     console.log('Token:', token); // Verifica el token
-    const response = await axios.get('http://localhost:3001/usuarios', {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/usuarios`, {
       headers: { Authorization: `Bearer ${token}` }, // Asegúrate de que el token esté en el formato correcto
     });
     console.log('Usuarios Response:', response); // Verifica la respuesta completa
@@ -122,7 +122,7 @@ const fetchUsuarios = async () => {
 const fetchPedidos = async () => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3001/pedidos', {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/pedidos`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     pedidos.value = response.data;
@@ -136,7 +136,7 @@ const fetchPedidos = async () => {
 const fetchProductos = async () => {
   try {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:3001/productos', {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/productos`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     productos.value = response.data;

@@ -129,7 +129,7 @@ export default {
     });
 
     const getImageUrl = (imagenUrl) => {
-    return imagenUrl ? `http://localhost:3001${imagenUrl}` : ''; // Asegúrate de que la URL sea correcta
+    return imagenUrl ? `${import.meta.env.VITE_API_URL}${imagenUrl}` : ''; // Asegúrate de que la URL sea correcta
   };
 
     const columns = [

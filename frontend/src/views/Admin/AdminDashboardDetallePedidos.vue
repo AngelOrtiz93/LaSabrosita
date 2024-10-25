@@ -19,7 +19,7 @@ import CrudTable from '@/components/Utils/CrudTable.vue';
 import { getDetallePedidos, deleteDetallePedido, updateDetallePedido, createDetallePedido } from '@/api/detallePedido';
 
 // URL de la API de detalles de pedidos
-const apiUrl = 'http://localhost:3001/detalle-pedidos';
+const apiUrl = `${import.meta.env.VITE_API_URL}/detalle-pedidos`;
 
 // Obtener el token desde localStorage
 const token = ref(localStorage.getItem('token'));

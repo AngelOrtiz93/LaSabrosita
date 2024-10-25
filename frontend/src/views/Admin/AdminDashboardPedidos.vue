@@ -145,7 +145,7 @@ export default {
     const fetchPedidos = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3001/pedidos', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/pedidos`, {
           headers: { Authorization: token },
         });
         console.log('Pedidos:', response.data); // Verifica la respuesta aquí
@@ -164,7 +164,7 @@ export default {
     const updatePedido = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.put(`http://localhost:3001/pedidos/${form.id}`, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/pedidos/${form.id}`, {
           estado: form.estado,
         }, {
           headers: { Authorization: token },
