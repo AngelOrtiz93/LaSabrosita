@@ -53,3 +53,4 @@ export const createPermiso = async (permisoData, token) => {
     throw error;
   }
 };
+

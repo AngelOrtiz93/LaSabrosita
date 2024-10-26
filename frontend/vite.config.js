@@ -31,4 +31,10 @@ export default defineConfig({
     port: 4173, // Puerto que usará Vite para el servidor de desarrollo
     host: '0.0.0.0', // Permite que el servidor escuche en todas las interfaces
   },
+  // Configuración de esbuild para manejar JSX
+  esbuild: {
+    loader: {
+      '.js': 'jsx', // Esto permite que los archivos .js se procesen como JSX
+    },
+  },
 });

@@ -1,55 +1,26 @@
 import axios from 'axios';
 
-const API_URL =  `${import.meta.env.VITE_API_URL}/productos`;
-
-// Obtener todos los productos
-export const getProducts = async (token) => {
-  try {
-    const response = await axios.get(API_URL, {
-      headers: { Authorization: token } // Sin prefijo 'Bearer'
-    });
-    return response;
-  } catch (error) {
-    console.error('Error al obtener los productos:', error);
-    throw error;
-  }
+export const fetchProductos = async (token) => {
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/productos`, {
+    headers: { Authorization: token },
+  });
+  return response.data;
 };
 
-// Eliminar un producto por ID
-export const deleteProduct = async (id, token) => {
-  try {
-    const response = await axios.delete(`${API_URL}/${id}`, {
-      headers: { Authorization: token } // Sin prefijo 'Bearer'
-    });
-    return response;
-  } catch (error) {
-    console.error(`Error al eliminar el producto con ID ${id}:`, error);
-    throw error;
-  }
+export const createProducto = async (token, producto) => {
+  await axios.post(`${import.meta.env.VITE_API_URL}/productos`, producto, {
+    headers: { Authorization: token },
+  });
 };
 
-// Actualizar un producto
-export const updateProduct = async (id, productData, token) => {
-  try {
-    const response = await axios.put(`${API_URL}/${id}`, productData, {
-      headers: { Authorization: token } // Sin prefijo 'Bearer'
-    });
-    return response;
-  } catch (error) {
-    console.error(`Error al actualizar el producto con ID ${id}:`, error);
-    throw error;
-  }
+export const updateProducto = async (token, producto) => {
+  await axios.put(`${import.meta.env.VITE_API_URL}/productos/${producto.id}`, producto, {
+    headers: { Authorization: token },
+  });
 };
 
-// Crear un nuevo producto
-export const createProduct = async (productData, token) => {
-  try {
-    const response = await axios.post(API_URL, productData, {
-      headers: { Authorization: token } // Sin prefijo 'Bearer'
-    });
-    return response;
-  } catch (error) {
-    console.error('Error al crear el producto:', error);
-    throw error;
-  }
+export const deleteProducto = async (token, id) => {
+  await axios.delete(`${import.meta.env.VITE_API_URL}/productos/${id}`, {
+    headers: { Authorization: token },
+  });
 };

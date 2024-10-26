@@ -31,63 +31,36 @@
       </a-table>
     </a-layout-content>
 
-    <!-- Modal para Crear/Editar Permiso -->
-    <a-modal
-      v-model:open="isModalVisible"
-      :title="isEditing ? 'Editar Permiso' : 'Crear Permiso'"
-      @ok="isEditing ? updatePermission() : createPermission()"
+    <CreateEditPermissionModal
+      :visible="isModalVisible"
+      :isEditing="isEditing"
+      :form="form"
       @cancel="resetModal"
-      :width="'35%'"
-    >
-      <a-form :model="form">
-        <a-form-item label="Nombre">
-          <a-input v-model:value="form.nombre" />
-        </a-form-item>
-        <a-form-item label="Descripción">
-          <a-input v-model:value="form.descripcion" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
+      @save="handleSave"
+    />
 
-    <!-- Modal de Confirmación de Eliminación -->
-    <a-modal
-      v-model:visible="isDeleteModalVisible"
-      title="Confirmar Eliminación"
-      @ok="deletePermission()"
+    <DeletePermissionModal
+      :visible="isDeleteModalVisible"
       @cancel="resetDeleteModal"
-    >
-      <p>¿Estás seguro de que deseas eliminar este permiso?</p>
-    </a-modal>
+      @delete="deletePermissionHandler"
+    />
 
-    <!-- Modal de Detalles del Permiso -->
-    <a-modal
-      v-model:visible="isDetailsModalVisible"
-      title="Detalles del Permiso"
-      :width="'60%'"
+    <DetailsPermissionModal
+      :visible="isDetailsModalVisible"
+      :permission="selectedPermission"
       @cancel="resetDetailsModal"
-      :footer="null"
-    >
-      <div>
-        <h3>Nombre: {{ selectedPermission.name }}</h3>
-        <p>Descripción: {{ selectedPermission.description }}</p>
-      </div>
-    </a-modal>
+    />
   </a-layout>
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons-vue';
 import { notification } from 'ant-design-vue';
-import axios from 'axios';
-
-const showNotification = (type, message, description) => {
-  notification[type]({
-    message,
-    description,
-    placement: 'topRight',
-  });
-};
+import { getPermisos, createPermiso, updatePermiso, deletePermiso } from '@/api/permission'; 
+import CreateEditPermissionModal from '@/components/Permission/CreateEditPermissionModal.vue';
+import DeletePermissionModal from '@/components/Permission/DeletePermissionModal.vue';
+import DetailsPermissionModal from '@/components/Permission/DetailsPermissionModal.vue';
 
 export default {
   components: {
@@ -96,6 +69,9 @@ export default {
     DeleteOutlined,
     EyeOutlined,
     SearchOutlined,
+    CreateEditPermissionModal,
+    DeletePermissionModal,
+    DetailsPermissionModal,
   },
   setup() {
     const permissions = ref([]);
@@ -109,11 +85,7 @@ export default {
       nombre: '',
       descripcion: '',
     });
-    const selectedPermission = ref({
-      id: '',
-      name: '',
-      description: '',
-    });
+    const selectedPermission = ref({});
 
     const columns = [
       { title: 'Nombre', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
@@ -132,18 +104,6 @@ export default {
       );
     });
 
-    const fetchPermissions = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/permissions`, {
-          headers: { Authorization: token },
-        });
-        permissions.value = response.data;
-      } catch (error) {
-        console.error('Error al obtener permisos:', error);
-      }
-    };
-
     const showCreateModal = () => {
       resetForm();
       isEditing.value = false;
@@ -158,60 +118,9 @@ export default {
       isModalVisible.value = true;
     };
 
-    const createPermission = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post(`${import.meta.env.VITE_API_URL}/permissions`, {
-          nombre: form.nombre,
-          descripcion: form.descripcion,
-        }, {
-          headers: { Authorization: token },
-        });
-        fetchPermissions();
-        resetModal();
-        showNotification('success', 'Permiso creado', 'El permiso se ha creado exitosamente.');
-      } catch (error) {
-        console.error('Error al crear permiso:', error);
-        showNotification('error', 'Error al crear permiso', `Error: ${error.response.data.details}`);
-      }
-    };
-
-    const updatePermission = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.put(`${import.meta.env.VITE_API_URL}/permissions/${form.id}`, {
-          nombre: form.nombre,
-          descripcion: form.descripcion,
-        }, {
-          headers: { Authorization: token },
-        });
-        fetchPermissions();
-        resetModal();
-        showNotification('success', 'Permiso actualizado', 'El permiso se ha actualizado exitosamente.');
-      } catch (error) {
-        console.error('Error al actualizar permiso:', error);
-        showNotification('error', 'Error al actualizar permiso', `Error: ${error.response.data.details}`);
-      }
-    };
-
     const confirmDelete = (id) => {
       form.id = id;
       isDeleteModalVisible.value = true;
-    };
-
-    const deletePermission = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`${import.meta.env.VITE_API_URL}/permissions/${form.id}`, {
-          headers: { Authorization: token },
-        });
-        fetchPermissions();
-        resetDeleteModal();
-        showNotification('success', 'Permiso eliminado', 'El permiso se ha eliminado exitosamente.');
-      } catch (error) {
-        console.error('Error al eliminar permiso:', error);
-        showNotification('error', 'Error al eliminar permiso', `Error: ${error.response.data.details}`);
-      }
     };
 
     const viewDetails = (permission) => {
@@ -220,11 +129,9 @@ export default {
     };
 
     const resetForm = () => {
-      Object.assign(form, {
-        id: null,
-        nombre: '',
-        descripcion: '',
-      });
+      form.id = null;
+      form.nombre = '';
+      form.descripcion = '';
     };
 
     const resetModal = () => {
@@ -232,26 +139,53 @@ export default {
       isModalVisible.value = false;
     };
 
-    const resetDetailsModal = () => {
-      selectedPermission.value = {
-        id: '',
-        name: '',
-        description: '',
-      };
-      isDetailsModalVisible.value = false;
-    };
-
     const resetDeleteModal = () => {
       form.id = null;
       isDeleteModalVisible.value = false;
+    };
+
+    const resetDetailsModal = () => {
+      selectedPermission.value = {};
+      isDetailsModalVisible.value = false;
     };
 
     const handleSearch = (event) => {
       searchText.value = event.target.value;
     };
 
+    const fetchAllPermissions = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Asegúrate de obtener el token
+        const response = await getPermisos(token);
+        permissions.value = response.data; // Cambia a response.data si el backend lo requiere
+      } catch (error) {
+        notification.error({
+          message: 'Error',
+          description: 'No se pudieron cargar los permisos.',
+        });
+      }
+    };
+
+    const deletePermissionHandler = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await deletePermiso(form.id, token);
+        fetchAllPermissions();
+        resetDeleteModal();
+        notification.success({
+          message: 'Éxito',
+          description: 'Permiso eliminado correctamente.',
+        });
+      } catch (error) {
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo eliminar el permiso.',
+        });
+      }
+    };
+
     onMounted(() => {
-      fetchPermissions();
+      fetchAllPermissions();
     });
 
     return {
@@ -266,15 +200,13 @@ export default {
       filteredPermissions,
       showCreateModal,
       showEditModal,
-      createPermission,
-      updatePermission,
       confirmDelete,
-      deletePermission,
       viewDetails,
       handleSearch,
       resetModal,
-      resetDetailsModal,
       resetDeleteModal,
+      resetDetailsModal,
+      deletePermissionHandler,
     };
   },
 };

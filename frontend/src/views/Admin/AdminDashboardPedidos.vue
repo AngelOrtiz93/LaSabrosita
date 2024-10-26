@@ -31,56 +31,39 @@
     </a-layout-content>
 
     <!-- Modal para editar pedido -->
-    <a-modal
-      v-model:open="isModalVisible"
-      title="Editar Pedido"
-      @ok="updatePedido"
-      @cancel="resetModal"
-    >
-      <a-form :form="form">
-        <a-form-item label="Estado">
-          <a-select v-model:value="form.estado">
-            <a-select-option value="Pendiente">Pendiente</a-select-option>
-            <a-select-option value="En Proceso">En Proceso</a-select-option>
-            <a-select-option value="Enviado">Enviado</a-select-option>
-            <a-select-option value="Entregado">Entregado</a-select-option>
-            <a-select-option value="Cancelado">Cancelado</a-select-option>
-          </a-select>
-        </a-form-item>
-      </a-form>
-    </a-modal>
+    <PedidoFormModal
+      :isVisible="isModalVisible"
+      :pedido="form"
+      @update:isVisible="isModalVisible = $event"
+      @pedidoUpdated="handleUpdate"
+    />
 
     <!-- Modal para detalles del pedido -->
-<a-modal
-  v-model:open="isDetailsModalVisible"
-  title="Detalles del Pedido"
-  @ok="resetDetailsModal"
-  @cancel="resetDetailsModal"
-  width="70%"
->
-  <div v-if="selectedPedido"><br>
-    <p><strong>Número de Pedido:</strong> {{ selectedPedido.id }}</p>
-    <p><strong>Nombre: </strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.nombre : 'No disponible' }}</p>
-    <p><strong>Teléfono: </strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.telefono : 'No disponible' }}</p>
-    <p><strong>Dirección: </strong> {{ selectedPedido.Usuario ? selectedPedido.Usuario.direccion : 'No disponible' }}</p>
-    <p><strong>Fecha del Pedido:</strong> {{ selectedPedido.fechaPedido }}</p>
-    <p><strong>Estado:</strong> {{ selectedPedido.estado }}</p><br>
-    
-    <!-- Valor Total Mejorado -->
-    
-    <a-table :columns="detailColumns" :data-source="selectedPedido.DetallePedidos" rowKey="id" />
+    <PedidoDetailsModal
+      :isVisible="isDetailsModalVisible"
+      :pedido="selectedPedido"
+      @update:isVisible="isDetailsModalVisible = $event"
+    />
 
-    <p class="valor-total"><strong>Valor Total:</strong> ${{ selectedPedido.total.toFixed(2) }}</p>
-  </div>
-</a-modal>
+    <!-- Modal para confirmar eliminación de pedido -->
+    <ConfirmDeletePedidoModal
+      :isVisible="isDeleteModalVisible"
+      :pedidoId="form.id"
+      @update:isVisible="isDeleteModalVisible = $event"
+      @deleteConfirmed="handleDelete"
+    />
   </a-layout>
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue';
-import { EditOutlined, DeleteOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons-vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { notification } from 'ant-design-vue';
 import axios from 'axios';
+import { EditOutlined, DeleteOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons-vue';
+import { fetchPedidos, updatePedido, deletePedido } from '@/api/pedido'; // Asegúrate de que la ruta sea correcta
+import ConfirmDeletePedidoModal from '@/components/pedidos/ConfirmDeletePedidoModal.vue';
+import PedidoDetailsModal from '@/components/pedidos/PedidoDetailsModal.vue';
+import PedidoFormModal from '@/components/pedidos/PedidoFormModal.vue';
 
 export default {
   components: {
@@ -88,6 +71,9 @@ export default {
     DeleteOutlined,
     InfoCircleOutlined,
     SearchOutlined,
+    ConfirmDeletePedidoModal,
+    PedidoDetailsModal,
+    PedidoFormModal,
   },
   setup() {
     const pedidos = ref([]);
@@ -104,11 +90,7 @@ export default {
     const columns = [
       { title: 'Número de Pedido', dataIndex: 'id' },
       { title: 'Estado', dataIndex: 'estado' },
-      { 
-        title: 'Nombre del Cliente', 
-        dataIndex: ['Usuario', 'nombre', ],  
-        render: text => text || 'No disponible' 
-      },
+      { title: 'Nombre del Cliente', dataIndex: ['Usuario', 'nombre'], render: text => text || 'No disponible' },
       {
         title: 'Acciones',
         key: 'actions',
@@ -116,42 +98,20 @@ export default {
       },
     ];
 
-    const detailColumns = [
-      {
-        title: 'Producto',
-        dataIndex: ['Producto', 'nombre'],
-      },
-      {
-        title: 'Cantidad',
-        dataIndex: 'cantidad',
-      },
-      {
-        title: 'Precio Unitario',
-        dataIndex: 'precioUnitario',
-      },
-      {
-        title: 'Descripción',
-        dataIndex: ['Producto', 'descripcion'],
-      },
-    ];
-
     const filteredPedidos = computed(() => {
       return pedidos.value.filter(pedido =>
-        pedido.id.toString().includes(searchText.value.toLowerCase()) ||
+        pedido.id.toString().includes(searchText.value) ||
         pedido.estado.toLowerCase().includes(searchText.value.toLowerCase())
       );
     });
 
-    const fetchPedidos = async () => {
+    const fetchPedidosData = async () => {
+      const token = localStorage.getItem('token');
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/pedidos`, {
-          headers: { Authorization: token },
-        });
-        console.log('Pedidos:', response.data); // Verifica la respuesta aquí
-        pedidos.value = response.data;
+        const data = await fetchPedidos(token);
+        pedidos.value = data;
       } catch (error) {
-        console.error('Error al obtener pedidos:', error);
+        console.error('Error fetching pedidos:', error);
       }
     };
 
@@ -161,22 +121,16 @@ export default {
       isModalVisible.value = true;
     };
 
-    const updatePedido = async () => {
+    const handleUpdate = async (updatedData) => {
+      const token = localStorage.getItem('token');
       try {
-        const token = localStorage.getItem('token');
-        await axios.put(`${import.meta.env.VITE_API_URL}/pedidos/${form.id}`, {
-          estado: form.estado,
-        }, {
-          headers: { Authorization: token },
-        });
-        await fetchPedidos();
+        await updatePedido(token, updatedData.id, { estado: updatedData.estado });
         notification.success({
           message: 'Éxito',
           description: 'El pedido ha sido actualizado correctamente.',
         });
-        resetModal();
+        await fetchPedidosData();
       } catch (error) {
-        console.error('Error al actualizar el pedido:', error);
         notification.error({
           message: 'Error',
           description: 'No se pudo actualizar el pedido.',
@@ -189,58 +143,51 @@ export default {
       isDetailsModalVisible.value = true;
     };
 
-    const resetDetailsModal = () => {
-      isDetailsModalVisible.value = false;
-      selectedPedido.value = null;
-    };
-
     const confirmDelete = (id) => {
       form.id = id;
       isDeleteModalVisible.value = true;
     };
 
-    const resetModal = () => {
-      isModalVisible.value = false;
-    };
-
-    const resetForm = () => {
-      form.id = null;
-      form.estado = '';
+    const handleDelete = async (pedidoId) => {
+      const token = localStorage.getItem('token');
+      try {
+        await deletePedido(token, pedidoId);
+        notification.success({
+          message: 'Éxito',
+          description: 'El pedido ha sido eliminado correctamente.',
+        });
+        await fetchPedidosData();
+      } catch (error) {
+        notification.error({
+          message: 'Error',
+          description: 'No se pudo eliminar el pedido.',
+        });
+      }
     };
 
     const handleSearch = (event) => {
       searchText.value = event.target.value;
     };
 
-    const hasPermission = (requiredPermission) => {
-      const userPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
-      return userPermissions.includes(requiredPermission);
-    };
-
-    onMounted(() => {
-      fetchPedidos();
-    });
+    onMounted(fetchPedidosData);
 
     return {
       pedidos,
       filteredPedidos,
       columns,
-      detailColumns,
       form,
       isModalVisible,
       isDetailsModalVisible,
+      isDeleteModalVisible,
       selectedPedido,
       showEditModal,
       showDetailsModal,
-      resetDetailsModal,
       confirmDelete,
-      updatePedido,
-      resetModal,
-      resetForm,
+      handleUpdate,
+      handleDelete,
       handleSearch,
-      hasPermission,
     };
-  }
+  },
 };
 </script>
 
@@ -260,15 +207,5 @@ export default {
 .content {
   padding: 24px;
   background: #fff;
-}
-.valor-total {
-  font-size: 1.5em; /* Tamaño de fuente más grande */
-  color: #ff5722; /* Color atractivo */
-  font-weight: bold; /* Negrita */
-  padding: 10px; /* Espaciado */
-  border: 2px solid #ff5722; /* Borde alrededor del total */
-  border-radius: 5px; /* Bordes redondeados */
-  background-color: #fff3e0; /* Fondo ligero */
-  margin-top: 10px; /* Espacio superior */
 }
 </style>
