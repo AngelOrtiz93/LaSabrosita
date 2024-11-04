@@ -7,12 +7,11 @@ const sequelize = require('./config/db');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3001', 'https://lasabrosita-1.onrender.com'],
+  origin: ['http://localhost:8080', 'https://lasabrosita-1.onrender.com', 'http://localhost:4173', 'http://localhost:5173', 'http://localhost'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
-
 
 // Configurar middleware para headers JSON
 app.use((req, res, next) => {
@@ -98,7 +97,8 @@ app.use(errorMiddleware);
 // Iniciar servidor
 const startServer = async () => {
   try {
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: false }); // Sincronizar modelos con la base de datos
+
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);

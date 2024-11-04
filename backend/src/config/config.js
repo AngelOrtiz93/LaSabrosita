@@ -1,29 +1,28 @@
-require('dotenv').config(); 
-
-module.exports = {
+// src/config/index.js
+const config = {
   development: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'mysql',  // Dialecto de MySQL en desarrollo
-    port: process.env.DB_PORT || 3306, // Puerto de MySQL
+    database: process.env.DB_NAME || 'testdb',
+    username: process.env.DB_USER || 'admin',
+    password: process.env.DB_PASSWORD || '1234',
+    host: process.env.DB_HOST || 'mysql',
+    dialect: 'mysql',
+    port: process.env.DB_PORT || 3306,
+    dialectOptions: {},
   },
   production: {
+    database: process.env.DB_NAME,
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
     host: process.env.DB_HOST,
-    dialect: 'postgres',  // PostgreSQL en producción
-    seederStorage: 'sequelize',
-    seederStorageTableName: 'sequelize_data',
-    port: process.env.DB_PORT || 5432, // Puerto de PostgreSQL
-    logging: false,  // Desactivar logs en producción
+    dialect: 'mysql',
+    port: process.env.DB_PORT || 3306,
     dialectOptions: {
       ssl: {
-        require: true,  // Asegura que se use SSL en PostgreSQL si Render lo requiere
-        rejectUnauthorized: false,  // Necesario en algunas configuraciones de Render
+        require: true,
+        rejectUnauthorized: false,
       },
     },
   },
 };
+
+module.exports = config;

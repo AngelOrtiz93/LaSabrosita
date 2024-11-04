@@ -8,7 +8,7 @@ export const getDetallePedidos = async (token) => {
     const response = await axios.get(API_URL, {
       headers: { Authorization: token }, // Sin prefijo 'Bearer'
     });
-    return response; // Asegúrate de devolver solo los datos
+    return response.data; // Asegúrate de devolver solo los datos
   } catch (error) {
     console.error('Error al obtener los detalles de pedido:', error);
     throw error;
@@ -16,17 +16,14 @@ export const getDetallePedidos = async (token) => {
 };
 
 // Obtener un detalle de pedido por ID
-export const getDetallePedidoById = async (id, token) => {
-  try {
-    const response = await axios.get(`${API_URL}/${id}`, {
-      headers: { Authorization: token }, // Sin prefijo 'Bearer'
-    });
-    return response;
-  } catch (error) {
-    console.error(`Error al obtener el detalle de pedido con ID ${id}:`, error);
-    throw error;
-  }
+export const getDetallePedidoById = async (pedidoId, token) => {
+  console.log("Requesting details for pedidoId:", pedidoId); // Verifica el valor aquí
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/pedidos/${pedidoId}`, {
+    headers: { Authorization: token },
+  });
+  return response;
 };
+
 
 // Eliminar un detalle de pedido por ID
 export const deleteDetallePedido = async (id, token) => {
@@ -34,7 +31,7 @@ export const deleteDetallePedido = async (id, token) => {
     const response = await axios.delete(`${API_URL}/${id}`, {
       headers: { Authorization: token }, // Sin prefijo 'Bearer'
     });
-    return response;
+    return response.data; // Asegúrate de devolver solo los datos
   } catch (error) {
     console.error(`Error al eliminar el detalle de pedido con ID ${id}:`, error);
     throw error;
@@ -47,7 +44,7 @@ export const updateDetallePedido = async (id, detallePedidoData, token) => {
     const response = await axios.put(`${API_URL}/${id}`, detallePedidoData, {
       headers: { Authorization: token }, // Sin prefijo 'Bearer'
     });
-    return response;
+    return response.data; // Asegúrate de devolver solo los datos
   } catch (error) {
     console.error(`Error al actualizar el detalle de pedido con ID ${id}:`, error);
     throw error;
@@ -60,7 +57,7 @@ export const createDetallePedido = async (detallePedidoData, token) => {
     const response = await axios.post(API_URL, detallePedidoData, {
       headers: { Authorization: token }, // Sin prefijo 'Bearer'
     });
-    return response;
+    return response.data; // Asegúrate de devolver solo los datos
   } catch (error) {
     console.error('Error al crear el detalle de pedido:', error);
     throw error;

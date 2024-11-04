@@ -1,4 +1,5 @@
 const clienteService = require('../services/clienteService');
+const Role = require('../models/Role'); 
 const bcrypt = require('bcrypt');
 
 exports.getAllClientes = async (req, res) => {
@@ -43,7 +44,7 @@ exports.getClienteById = async (req, res) => {
 exports.createCliente = async (req, res) => {
   try {
     const { nombre, apellido, email, telefono, direccion, contraseña } = req.body;
-    
+
     // Validación de la contraseña
     if (!contraseña) {
       return res.status(400).json({ error: 'Contraseña inválida', detalles: 'La contraseña no puede estar vacía.' });
@@ -51,7 +52,12 @@ exports.createCliente = async (req, res) => {
 
     // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(contraseña, 10);
-    const clienteRoleId = '05b1d9d5-d727-4c99-b404-16b8fcffd684';
+
+    // Buscar el rol de cliente
+    const clienteRole = await Role.findOne({ where: { name: 'Cliente' } });
+    if (!clienteRole) {
+      return res.status(404).json({ error: 'Rol de cliente no encontrado.' });
+    }
 
     // Intentar crear un nuevo cliente
     const newCliente = await clienteService.createCliente({
@@ -61,7 +67,7 @@ exports.createCliente = async (req, res) => {
       telefono,
       direccion,
       contraseña: hashedPassword,
-      roleId: clienteRoleId,
+      roleId: clienteRole.id, // Usar el ID del rol de cliente encontrado
     });
 
     res.status(201).json({

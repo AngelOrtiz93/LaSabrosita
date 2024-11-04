@@ -54,38 +54,36 @@ export const createPedido = async (pedidoData, token) => {
   return response.data; // Asegúrate de devolver solo los datos
 };
 
-
+// Obtener todos los pedidos
 export const fetchPedidos = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/pedidos`, {
-      headers: { Authorization: token },
+    const response = await axios.get(`${API_URL}`, {
+      headers: { Authorization: token }, // Sin 'Bearer'
     });
-    return response.data;
+    return response.data; // Asegúrate de devolver solo los datos
   } catch (error) {
     console.error('Error al obtener pedidos:', error);
     throw error;
   }
 };
 
+// Actualizar un pedido
 export const updatePedido = async (token, id, data) => {
-  try {
-    await axios.put(`${API_URL}/pedidos/${id}`, data, {
-      headers: { Authorization: token },
-    });
-  } catch (error) {
-    console.error('Error al actualizar el pedido:', error);
-    throw error;
-  }
+  const response = await axios.put(`${import.meta.env.VITE_API_URL}/pedidos/${id}`, data, {
+    headers: { Authorization: token },
+  });
+  return response.data; // Asegúrate de que esto retorne el pedido actualizado
 };
 
+
+// Eliminar un pedido
 export const deletePedido = async (token, id) => {
   try {
-    await axios.delete(`${API_URL}/pedidos/${id}`, {
-      headers: { Authorization: token },
+    await axios.delete(`${API_URL}/${id}`, {
+      headers: { Authorization: token }, // Sin 'Bearer'
     });
   } catch (error) {
     console.error('Error al eliminar el pedido:', error);
     throw error;
   }
 };
-

@@ -1,3 +1,5 @@
+//src/utils/createPermissions.js
+
 require('dotenv').config(); // Cargar variables de entorno
 
 const sequelize = require('../config/db'); // Importar instancia de sequelize
@@ -63,8 +65,19 @@ const permissions = [
   { name: 'Obtener Todos los Permisos', description: 'Permiso para obtener todos los permisos.' },
   { name: 'Obtener Permiso por ID', description: 'Permiso para obtener un permiso por ID.' },
   { name: 'Actualizar Permiso', description: 'Permiso para actualizar un permiso existente.' },
-  { name: 'Eliminar Permiso', description: 'Permiso para eliminar un permiso.' }
+  { name: 'Eliminar Permiso', description: 'Permiso para eliminar un permiso.' },
+
+  // Permisos de usuarios
+  { name: 'Obtener Todos los Usuarios', description: 'Permiso para obtener todos los usuarios.' },
+  { name: 'Obtener Usuario por ID', description: 'Permiso para obtener un usuario por ID.' },
+  { name: 'Crear Usuario', description: 'Permiso para crear un nuevo usuario.' },
+  { name: 'Actualizar Usuario', description: 'Permiso para actualizar un usuario existente.' },
+  { name: 'Eliminar Usuario', description: 'Permiso para eliminar un usuario.' },
+  
+  // Permiso para asignación de roles a usuarios
+  { name: 'Asignar Roles', description: 'Permiso para asignar roles a un usuario.' },
 ];
+
 
 const createRolesAndPermissions = async () => {
   try {
@@ -112,7 +125,7 @@ const createRolesAndPermissions = async () => {
       return map;
     }, {});
 
-    // Asignar permisos al rol Administrador
+    // Asignar todos los permisos al rol Administrador
     const adminRolePermissions = permissions.map(perm => ({
       roleId: roleMap['Administrador'],
       permissionId: permissionMap[perm.name]
@@ -120,7 +133,7 @@ const createRolesAndPermissions = async () => {
 
     await RolePermission.bulkCreate(adminRolePermissions);
 
-    console.log('Permisos asignados al rol Administrador.');
+    console.log('Todos los permisos asignados al rol Administrador.');
 
     // Asignar permisos básicos a los otros roles
     const basicPermissions = [
@@ -156,18 +169,17 @@ const createRolesAndPermissions = async () => {
       'Eliminar Producto'
     ];
 
-    for (const roleName of ['Cliente', 'Empleado', 'Domiciliario']) {
-      const roleId = roleMap[roleName];
-      const permissionsToAssign = basicPermissions.map(permName => ({
-        roleId,
+    const basicRolePermissions = allRoles
+      .filter(role => role.name !== 'Administrador')
+      .map(role => basicPermissions.map(permName => ({
+        roleId: role.id,
         permissionId: permissionMap[permName]
-      }));
+      })))
+      .flat();
 
-      await RolePermission.bulkCreate(permissionsToAssign);
-    }
+    await RolePermission.bulkCreate(basicRolePermissions);
 
-    console.log('Permisos básicos asignados a roles específicos.');
-
+    console.log('Permisos básicos asignados a roles de Cliente, Empleado y Domiciliario.');
   } catch (error) {
     console.error('Error al crear roles y permisos:', error);
   } finally {
